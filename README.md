@@ -55,7 +55,31 @@ The drone is a multirotor quadcopter built using standardized department-supplie
 
 - GCS software (e.g., Mission Planner or QGroundControl) is used for mission planning, waypoint upload, and monitoring.
 
-**7. Safety Systems**
+**7. IR Camera**
+
+- Infrared camera module for thermal imaging and low-light vision.
+
+- Enables applications such as obstacle detection, search-and-rescue, and environmental monitoring.
+
+- Data can be processed onboard (via Raspberry Pi) or streamed to the ground station.
+
+  **8. AI Camera**
+
+- Equipped with machine learning capabilities for object detection and recognition.
+
+- Supports autonomous decision-making in tasks such as target tracking and path planning.
+
+- Can integrate with ROS or other AI frameworks for advanced autonomy.
+
+  **9. Raspberry Pi 4 (Companion Computer)**
+
+- Acts as a high-performance companion computer to the flight controller.
+
+- Enables advanced onboard processing, including computer vision and AI algorithms.
+
+- Provides additional connectivity for sensors, cameras, and custom applications. 
+  
+**10. Safety Systems**
 
 - Geofencing, return-to-launch (RTL), and emergency failsafes.
 
