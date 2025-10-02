@@ -63,7 +63,7 @@ The drone is a multirotor quadcopter built using standardized department-supplie
 
 - Data can be processed onboard (via Raspberry Pi) or streamed to the ground station.
 
-  **8. AI Camera**
+**8. AI Camera**
 
 - Equipped with machine learning capabilities for object detection and recognition.
 
@@ -71,7 +71,7 @@ The drone is a multirotor quadcopter built using standardized department-supplie
 
 - Can integrate with ROS or other AI frameworks for advanced autonomy.
 
-  **9. Raspberry Pi 4 (Companion Computer)**
+**9. Raspberry Pi 4 (Companion Computer)**
 
 - Acts as a high-performance companion computer to the flight controller.
 
