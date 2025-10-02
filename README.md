@@ -49,19 +49,13 @@ The drone is a multirotor quadcopter built using standardized department-supplie
 
 - Integrates IMU (gyroscope + accelerometer), compass, barometer, and GPS.
 
-**6. Radio System**
-
-- Transmitter & Receiver (TX/RX): Allow manual remote control of the drone.
-
-- Includes failsafes for lost signal conditions.
-
-**7. Telemetry & Ground Control Station (GCS)**
+**6. Telemetry & Ground Control Station (GCS)**
 
 - Telemetry radios send real-time flight data to the GCS.
 
 - GCS software (e.g., Mission Planner or QGroundControl) is used for mission planning, waypoint upload, and monitoring.
 
-**8. Safety Systems**
+**7. Safety Systems**
 
 - Geofencing, return-to-launch (RTL), and emergency failsafes.
 
