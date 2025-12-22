@@ -84,3 +84,16 @@ The drone is a multirotor quadcopter built using standardized department-supplie
 - Geofencing, return-to-launch (RTL), and emergency failsafes.
 
 - Preflight checklist required before each flight.
+
+
+  ## 📄 Documentation & Project Resources (Google Drive)
+
+All living documentation for this project is maintained in Google Drive to enable real-time collaboration and version history.
+
+- 📘 System Architecture & Design Documents  
+- 📊 Test Plans, Flight Logs, and Data Analysis  
+- 📽️ Design Reviews & Final Presentation Slides  
+- 📑 Requirements, Safety Checklists, and Compliance Docs  
+
+👉 **Google Drive Folder:** https://drive.google.com/drive/folders/1I-N5GkhAKmFE1T7CpRyDYrAZDIUHNOzg?usp=sharing
+
