@@ -1,4 +1,4 @@
-# EECS-159A-Drone
+# EECS159A Senior Design Project (PhotonFlight)
 Welcome to the EECS 159A: Senior Design Project 1 (Drone) repository. This project guides students through the theory and hands-on practice of building, configuring, and flying a fiber optic drone from start to finish.
 
 At the end of the course, our team will have successfully assembled and flown our own quadcopter, fully equipped with autonomous flight capabilities via ArduPilot.
