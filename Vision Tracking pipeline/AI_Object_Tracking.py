@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """
 Object Detection Script for Raspberry Pi Zero W with IMX500 AI Camera
-Outputs detected objects as JSON to terminal
+Outputs detected objects as JSON to terminal with gstreamer stream for Mission Planner
 """
 from importlib.metadata import metadata
+from pymavlink import mavutil
 import json
 from logging import config
 import time
 from unicodedata import category
 import numpy as np
 from picamera2 import Picamera2
+from picamera2.outputs import GstOutput
 from picamera2.devices import IMX500
 from picamera2.devices.imx500 import NetworkIntrinsics
 import math
@@ -20,6 +22,12 @@ IOU = 0.65
 MAX_DETECTIONS = 10
 HORIZONTAL_FOV_DEG = 60.0   #Adjust to yout IMX500 lens FOV
 last_detections = []
+
+# Streaming parameters (Mission Planner UDP)
+STREAM_HOST = "192.168.1.155"
+STREAM_PORT = 1110
+STREAM_FPS = 30
+STREAM_BITRATE_KBPS = 1500
 
 class Detection:
     def __init__(self, coords, category, conf, metadata):
@@ -37,6 +45,42 @@ and confidence."""
         x, y, w, h = self.box
         self.center_x = x + w / 2
         self.center_y = y + h / 2
+
+class DroneController:
+    """ Handles MAVLink communicaiton with the drone """
+    
+    def __init__(self, drone_ip, drone_port):
+        self.drone_ip = drone_ip
+        self.drone_port = drone_port
+        self.master = None
+        self.connected = False
+
+    def connect(self):
+        """Connect to the drone via MAVLink"""
+        connection_string = f"tcp:{self.drone_ip}:{self.drone_port}"
+        print(f"Connecting to drone at {connection_string}...")
+        try:
+            self.master = mavutil.mavlink_connection(connection_string)
+            mavutil.mavlink_connection(connection_string)
+            self.master.wait_heartbeat(timeout=10)
+            self.connected = True
+            print(f"✓ Connected to drone (System ID: {self.master.target_system})")
+            return True
+        except Exception as e:
+            print(f"ERROR: Could not connect to drone: {e}")
+            return False
+    
+    def turn(self, angle: int):
+        self.master.command_long_send(self.master.target_system, self.master.target_component, mavutil.mavlink.MAV_CMD_CONDITION_YAW, 0, 45, 25, 0, 0, 0, 0, 0)
+        
+    def close(self):
+        """Close Connection to drone"""
+    if self.master:
+        try:
+            self.master.close()
+            print("Drone connection closed")
+        except:
+            pass
 
 def calculate_rotation_angle(detection, image_width, image_height):
     """Calculate the rotation angle needed to face the detection center.
@@ -56,6 +100,7 @@ def calculate_rotation_angle(detection, image_width, image_height):
 
     return angle
 
+# TODO: This is where we'd put in pymavlink commands to actually rotate the drone. For now, it just prints the angle.
 def rotate_drone(drone, angle):
     """Rotate the drone by the specified angle (in degrees).
     Angle in degrees (-180 to 180).
@@ -165,14 +210,30 @@ def main():
 
     # Initialize camera
     picam2 = Picamera2(imx500.camera_num)
-    config = picam2.create_preview_configuration(buffer_count=12)
+    config = picam2.create_preview_configuration(
+        buffer_count=12,
+        main={"size": (image_width, image_height), "format": "RGB888"},
+        controls={"FrameRate": STREAM_FPS},
+    )
 
     # Show firmware loading progress
     imx500.show_network_fw_progress_bar()
 
     # Configure and start camera
     picam2.configure(config)
+
+    gst_pipeline = (
+        "appsrc name=src is-live=true block=true format=TIME "
+        f"! video/x-raw,format=RGB,width={image_width},height={image_height},framerate={STREAM_FPS}/1 "
+        "! videoconvert "
+        f"! x264enc tune=zerolatency bitrate={STREAM_BITRATE_KBPS} speed-preset=ultrafast key-int-max={STREAM_FPS} "
+        "! rtph264pay config-interval=1 pt=96 "
+        f"! udpsink host={STREAM_HOST} port={STREAM_PORT}"
+    )
+    gst_output = GstOutput(gst_pipeline)
+
     picam2.start()
+    picam2.start_recording(gst_output)
 
     if intrinsics.preserve_aspect_ratio:
         imx500.set_auto_aspect_ratio()
@@ -239,6 +300,7 @@ def main():
     except KeyboardInterrupt:
         print("\nStopping object detection...", flush=True)
     finally:
+        picam2.stop_recording()
         picam2.stop()
         print("Camera stopped.", flush=True)
 
