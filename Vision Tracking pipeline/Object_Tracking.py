@@ -1,27 +1,26 @@
 #!/usr/bin/env python3
 """
 Object Detection Script for Raspberry Pi Zero W with IMX500 AI Camera
-Outputs detected objects as JSON to terminal with gstreamer stream for Mission Planner
+Outputs detected objects as JSON to terminal
 """
 from importlib.metadata import metadata
-from pymavlink import mavutil
 import json
 from logging import config
 import time
 from unicodedata import category
+import cv2
 import numpy as np
-from picamera2 import Picamera2
-from picamera2.outputs import GstOutput
+from picamera2 import MappedArray, Picamera2
+from picamera2.encoders import H264Encoder
+from picamera2.outputs import FfmpegOutput
 from picamera2.devices import IMX500
 from picamera2.devices.imx500 import NetworkIntrinsics
-import math
+from pymavlink import mavutil
 
 # Detection parameters
 THRESHOLD = 0.55
 IOU = 0.65
 MAX_DETECTIONS = 10
-HORIZONTAL_FOV_DEG = 60.0   #Adjust to yout IMX500 lens FOV
-last_detections = []
 
 # Streaming parameters (Mission Planner UDP)
 STREAM_HOST = "192.168.1.155"
@@ -29,13 +28,17 @@ STREAM_PORT = 1110
 STREAM_FPS = 30
 STREAM_BITRATE_KBPS = 1500
 
+last_detections = []
+labels = []
+
 class Detection:
     def __init__(self, coords, category, conf, metadata):
         """Create a Detection object, recording the bounding box, category
 and confidence."""
         self.category = category
         self.conf = conf
-        self.box = imx500.convert_inference_coords(coords, metadata, picam2)
+        self.box = imx500.convert_inference_coords(coords, metadata,
+picam2)
         self.center_x = None
         self.center_y = None
         self.calculate_center()
@@ -75,12 +78,93 @@ class DroneController:
         
     def close(self):
         """Close Connection to drone"""
-    if self.master:
-        try:
-            self.master.close()
-            print("Drone connection closed")
-        except:
-            pass
+        if self.master:
+            try:
+                self.master.close()
+                print("Drone connection closed")
+            except:
+                pass
+
+
+def parse_detections(metadata: dict):
+    """Parse the output tensor into detected objects."""
+    global last_detections
+
+    # Get outputs from IMX500
+    np_outputs = imx500.get_outputs(metadata, add_batch=True)
+    if np_outputs is None:
+        return last_detections
+
+    # Parse detection results
+    boxes, scores, classes = np_outputs[0][0], np_outputs[1][0], np_outputs[2][0]
+
+    # Normalize boxes if needed
+    input_w, input_h = imx500.get_input_size()
+    if intrinsics.bbox_normalization:
+        boxes = boxes / input_h
+
+    # Reorder bbox coordinates if needed
+    if intrinsics.bbox_order == "xy":
+        boxes = boxes[:, [1, 0, 3, 2]]
+
+    # Split boxes into individual coordinates
+    boxes = np.array_split(boxes, 4, axis=1)
+    boxes = zip(*boxes)
+
+    # Filter detections by threshold
+    last_detections = [
+        Detection(box, category, score, metadata)
+        for box, score, category in zip(boxes, scores, classes)
+        if score > THRESHOLD
+    ]
+    
+    return last_detections
+
+def get_labels():
+    """Get label names from intrinsics."""
+    labels = intrinsics.labels
+    if intrinsics.ignore_dash_labels:
+        labels = [label for label in labels if label and label != "-"]
+    return labels
+
+def draw_detections(request, stream="main"):
+    """Draw detection boxes and labels onto frames before encoding."""
+    if not last_detections:
+        return
+
+    with MappedArray(request, stream) as m:
+        for detection in last_detections:
+            x, y, w, h = detection.box
+            x, y, w, h = int(x), int(y), int(w), int(h)
+
+            label = ""
+            if labels and int(detection.category) < len(labels):
+                label = f"{labels[int(detection.category)]} ({detection.conf:.2f})"
+
+            if label:
+                (text_width, text_height), baseline = cv2.getTextSize(
+                    label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1
+                )
+                text_x = x + 5
+                text_y = y + 15
+                overlay = m.array.copy()
+                cv2.rectangle(
+                    overlay,
+                    (text_x, text_y - text_height),
+                    (text_x + text_width, text_y + baseline),
+                    (255, 255, 255),
+                    cv2.FILLED
+                )
+                cv2.addWeighted(overlay, 0.30, m.array, 0.70, 0, m.array)
+                cv2.putText(
+                    m.array, label, (text_x, text_y),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1
+                )
+
+            cv2.rectangle(m.array, (x, y), (x + w, y + h), (0, 255, 0, 0), 2)
+
+
+# Section of code for rotating the drone
 
 def calculate_rotation_angle(detection, image_width, image_height):
     """Calculate the rotation angle needed to face the detection center.
@@ -140,53 +224,12 @@ def track_object(detections, image_width, image_height, drone=None):
         "rotation_angle": angle,
         "confidence": best_detection.conf
     }
-        
-def parse_detections(metadata: dict):
-    """Parse the output tensor into detected objects."""
-    global last_detections
-
-    # Get outputs from IMX500
-    np_outputs = imx500.get_outputs(metadata, add_batch=True)
-    if np_outputs is None:
-        return last_detections
-
-    # Parse detection results
-    boxes, scores, classes = np_outputs[0][0], np_outputs[1][0], np_outputs[2][0]
-
-    # Normalize boxes if needed
-    input_w, input_h = imx500.get_input_size()
-    if intrinsics.bbox_normalization:
-        boxes = boxes / input_h
-
-    # Reorder bbox coordinates if needed
-    if intrinsics.bbox_order == "xy":
-        boxes = boxes[:, [1, 0, 3, 2]]
-
-    # Split boxes into individual coordinates
-    boxes = np.array_split(boxes, 4, axis=1)
-    boxes = zip(*boxes)
-
-    # Filter detections by threshold
-    last_detections = [
-        Detection(box, category, score, metadata)
-        for box, score, category in zip(boxes, scores, classes)
-        if score > THRESHOLD
-    ]
-    
-    return last_detections
-
-def get_labels():
-    """Get label names from intrinsics."""
-    labels = intrinsics.labels
-    if intrinsics.ignore_dash_labels:
-        labels = [label for label in labels if label and label != "-"]
-    return labels
 
 def main():
     global picam2, imx500, intrinsics
-
+    
     # Load the object detection model (MobileNet SSD)
-    model_path = "/usr/share/imx500-models/imx500_network_ssd_mobilenetv2_fpnlite_320x320_pp.rpk"
+    model_path ="/usr/share/imx500-models/imx500_network_ssd_mobilenetv2_fpnlite_320x320_pp.rpk"
 
     # Initialize IMX500 with the model
     imx500 = IMX500(model_path)
@@ -202,18 +245,23 @@ def main():
     except:
         # Fallback labels if file not found
         intrinsics.labels = [str(i) for i in range(80)]
-
+    
     intrinsics.update_with_defaults()
 
     # Get labels
+    global labels
     labels = get_labels()
 
     # Initialize camera
     picam2 = Picamera2(imx500.camera_num)
-    config = picam2.create_preview_configuration(
-        buffer_count=12,
-        main={"size": (image_width, image_height), "format": "RGB888"},
+    config = picam2.create_video_configuration(
         controls={"FrameRate": STREAM_FPS},
+        buffer_count=12
+    )
+
+    encoder = H264Encoder(bitrate=STREAM_BITRATE_KBPS * 1000)
+    output = FfmpegOutput(
+        f"-f rtp -payload_type 96 rtp://{STREAM_HOST}:{STREAM_PORT}?pkt_size=1200"
     )
 
     # Show firmware loading progress
@@ -221,19 +269,9 @@ def main():
 
     # Configure and start camera
     picam2.configure(config)
-
-    gst_pipeline = (
-        "appsrc name=src is-live=true block=true format=TIME "
-        f"! video/x-raw,format=RGB,width={image_width},height={image_height},framerate={STREAM_FPS}/1 "
-        "! videoconvert "
-        f"! x264enc tune=zerolatency bitrate={STREAM_BITRATE_KBPS} speed-preset=ultrafast key-int-max={STREAM_FPS} "
-        "! rtph264pay config-interval=1 pt=96 "
-        f"! udpsink host={STREAM_HOST} port={STREAM_PORT}"
-    )
-    gst_output = GstOutput(gst_pipeline)
-
     picam2.start()
-    picam2.start_recording(gst_output)
+    picam2.pre_callback = draw_detections
+    picam2.start_encoder(encoder, output)
 
     if intrinsics.preserve_aspect_ratio:
         imx500.set_auto_aspect_ratio()
@@ -246,40 +284,30 @@ def main():
             metadata = picam2.capture_metadata()
 
             # Parse detections from metadata
-            detections = parse_detections(metadata)
+            detections=parse_detections(metadata)
 
-            tracking_info = None
             # Track object and rotate drone
             if detections:
                 tracking_info = track_object(detections, image_width, image_height, drone=None)
-
+            
             # Convert to JSON format
             current_detections = []
             for detection in detections:
                 x, y, w, h = detection.box
-
-                angle = calculate_rotation_angle(detection, image_width, image_height)
-
                 det_dict = {
                     "class_id": int(detection.category),
-                    "class_name": labels[int(detection.category)] 
-                    if int(detection.category) < len(labels)
-                    else f"class_{int(detection.category)}",
+                    "class_name": labels[int(detection.category)] if int(detection.category) < len(labels) else
+                    f"class_{int(detection.category)}",
                     "confidence": float(detection.conf),
                     "bbox": {
                         "x": float(x),
                         "y": float(y),
                         "width": float(w),
                         "height": float(h)
-                    },
-                    "center": {
-                        "x": detection.center_x,
-                        "y": detection.center_y
-                    },
-                    "rotation_angle": angle
+                    }
                 }
                 current_detections.append(det_dict)
-
+            
             # Create JSON output
             output = {
                 "timestamp": time.time(),
@@ -300,7 +328,7 @@ def main():
     except KeyboardInterrupt:
         print("\nStopping object detection...", flush=True)
     finally:
-        picam2.stop_recording()
+        picam2.stop_encoder()
         picam2.stop()
         print("Camera stopped.", flush=True)
 
