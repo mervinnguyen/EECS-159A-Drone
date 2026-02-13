@@ -21,6 +21,7 @@ from pymavlink import mavutil
 THRESHOLD = 0.55
 IOU = 0.65
 MAX_DETECTIONS = 10
+HORIZONTAL_FOV_DEG = 60.0       #Adjust to your actual IMX500 horizontal FOV
 
 # Streaming parameters (Mission Planner UDP)
 STREAM_HOST = "192.168.1.155"
@@ -176,11 +177,8 @@ def calculate_rotation_angle(detection, image_width, image_height):
     deviation = detection.center_x - image_center_x
 
     # Convert pixel deviation to angle
-    # Adjust the divisor based on your actual camera FOV
-    angle = (deviation / image_width) * 60  # Assuming a 60 degree horizontal FOV for the camera
-
-    # Clamp angle to -180 to 180 range
-    angle = max(-180, min(180, angle))
+    degreesPerPixel = HORIZONTAL_FOV_DEG / image_width
+    angle = deviation * degreesPerPixel  # Assuming a 60 degree horizontal FOV for the camera
 
     return angle
 
