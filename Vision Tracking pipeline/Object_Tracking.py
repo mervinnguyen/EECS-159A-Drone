@@ -312,7 +312,7 @@ def main():
                 "detections": current_detections,
                 "count": len(current_detections),
                 "rotation_from_center_degrees":(
-                    tracking_info["rotation_angle"] if tracking_info else None
+                    tracking_info["rotation_angle"] if tracking_info and detection else None
                 ),
                 "detections": current_detections
             }
