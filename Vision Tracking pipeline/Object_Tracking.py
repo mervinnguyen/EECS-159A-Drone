@@ -67,8 +67,8 @@ class DroneController:
         print(f"Connecting to drone at {connection_string}...")
         try:
             self.master = mavutil.mavlink_connection(connection_string)
-            mavutil.mavlink_connection(connection_string)
             self.master.wait_heartbeat(timeout=10)
+            # This section might continue to execute even if we fail to connect to drone
             self.connected = True
             print(f"✓ Connected to drone (System ID: {self.master.target_system})")
             return True
@@ -77,7 +77,10 @@ class DroneController:
             return False
     
     def turn(self, angle: int):
-        self.master.command_long_send(self.master.target_system, self.master.target_component, mavutil.mavlink.MAV_CMD_CONDITION_YAW, 0, 45, 25, 0, 0, 0, 0, 0)
+        if angle < 0:
+            # send counter clockwise version of command with positive angle
+            self.master.mav.command_long_send(self.master.target_system, self.master.target_component, mavutil.mavlink.MAV_CMD_CONDITION_YAW, 0, abs(angle), 25, -1, 1, 0, 0, 0)
+        self.master.mav.command_long_send(self.master.target_system, self.master.target_component, mavutil.mavlink.MAV_CMD_CONDITION_YAW, 0, angle, 25, 1, 1, 0, 0, 0)
         
     def close(self):
         """Close Connection to drone"""
@@ -255,6 +258,11 @@ def main():
     global labels
     labels = get_labels()
 
+    # Connect to Mission Planner:
+    flight_controller = DroneController('192.168.1.155', '5762')
+    flight_controller.connect()
+
+
     # Initialize camera
     picam2 = Picamera2(imx500.camera_num)
     config = picam2.create_video_configuration(
@@ -288,11 +296,12 @@ def main():
             metadata = picam2.capture_metadata()
 
             # Parse detections from metadata
-            detections=parse_detections(metadata)
+            detections = parse_detections(metadata)
 
             # Track object and rotate drone
+            tracking_info = {"rotation_angle": 0}
             if detections:
-                tracking_info = track_object(detections, image_width, image_height, drone=None)
+                tracking_info = track_object(detections, image_width, image_height, drone=None) or tracking_info
             
             # Convert to JSON format
             current_detections = []
@@ -317,11 +326,11 @@ def main():
                 "timestamp": time.time(),
                 "detections": current_detections,
                 "count": len(current_detections),
-                "rotation_from_center_degrees":(
-                    tracking_info["rotation_angle"] if tracking_info and detection else None
-                ),
+                "rotation_from_center_degrees": tracking_info["rotation_angle"],
                 "detections": current_detections
             }
+
+            flight_controller.turn(tracking_info["rotation_angle"])
 
             # Print JSON to terminal
             print(json.dumps(output, indent=2), flush=True)
@@ -332,6 +341,7 @@ def main():
     except KeyboardInterrupt:
         print("\nStopping object detection...", flush=True)
     finally:
+        flight_controller.close()
         picam2.stop_encoder()
         picam2.stop()
         print("Camera stopped.", flush=True)
