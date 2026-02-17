@@ -28,6 +28,8 @@ STREAM_HOST = "192.168.1.155"
 STREAM_PORT = 1110
 STREAM_FPS = 30
 STREAM_BITRATE_KBPS = 1500
+RESOLUTION_WIDTH = 1280
+RESOLUTION_HEIGHT = 720
 
 last_detections = []
 labels = []
@@ -176,6 +178,8 @@ def calculate_rotation_angle(detection, image_width, image_height):
     # Calculate horizontal deviation from center
     deviation = detection.center_x - image_center_x
 
+    print("Deviation is: ", deviation)
+
     # Convert pixel deviation to angle
     degreesPerPixel = HORIZONTAL_FOV_DEG / image_width
     angle = deviation * degreesPerPixel  # Assuming a 60 degree horizontal FOV for the camera
@@ -234,7 +238,8 @@ def main():
     intrinsics = imx500.network_intrinsics
 
     # Get image dimensions
-    image_width, image_height = imx500.get_input_size()
+    image_width, image_height = RESOLUTION_WIDTH, RESOLUTION_HEIGHT
+    print("Image Width is: ", image_width)
 
     # Load COCO labels
     try:
@@ -253,6 +258,7 @@ def main():
     # Initialize camera
     picam2 = Picamera2(imx500.camera_num)
     config = picam2.create_video_configuration(
+        main={'size': (RESOLUTION_WIDTH, RESOLUTION_HEIGHT)},
         controls={"FrameRate": STREAM_FPS},
         buffer_count=12
     )
