@@ -8,6 +8,8 @@ import json
 from logging import config
 import time
 from unicodedata import category
+import sys
+import select
 import cv2
 import numpy as np
 from picamera2 import MappedArray, Picamera2
@@ -172,7 +174,7 @@ def draw_detections(request, stream="main"):
 
 # Section of code for rotating the drone
 
-def calculate_rotation_angle(detection, image_width, image_height):
+def calculate_rotation_angle(detection, image_width):
     """Calculate the rotation angle needed to face the detection center.
     Returns angle in degrees, where 0 is facing forward, positive is clockwise, negative is counterclockwise.
     """
@@ -189,24 +191,7 @@ def calculate_rotation_angle(detection, image_width, image_height):
 
     return angle
 
-# TODO: This is where we'd put in pymavlink commands to actually rotate the drone. For now, it just prints the angle.
-def rotate_drone(drone, angle):
-    """Rotate the drone by the specified angle (in degrees).
-    Angle in degrees (-180 to 180).
-    This is a generic example - replace with your drone SDK.
-    """
-    try:
-        # Example for DJI SDK: rotate the drone
-        # drone.set_yaw_rate(angle)  # Uncomment with your SDK
-
-        # Or smooth rotation command:
-        # drone.rotate(angle, duration=1.0)
-
-        print(f"Rotating drone by {angle:.1f} degrees", flush=True)
-    except Exception as e:
-        print(f"Error rotating drone: {e}", flush=True)
-
-def track_object(detections, image_width, image_height, drone=None):
+def track_object(detections, image_width):
     """Track the most confident detection and rotate drone to face it."""
     if not detections:
         return None
@@ -215,11 +200,7 @@ def track_object(detections, image_width, image_height, drone=None):
     best_detection = max(detections, key=lambda d: d.conf)
 
     # Calculate rotation angle
-    angle = calculate_rotation_angle(best_detection, image_width, image_height)
-
-    # Rotate drone
-    if drone:
-        rotate_drone(drone, angle)
+    angle = calculate_rotation_angle(best_detection, image_width)
     
     return {
         "target_center": {
@@ -229,6 +210,62 @@ def track_object(detections, image_width, image_height, drone=None):
         "rotation_angle": angle,
         "confidence": best_detection.conf
     }
+
+def print_menu():
+    print("------------------OPTIONS MENU------------------")
+    print("Type the option and hit enter.")
+    print("1. Enable Detection and Drone Tracking")
+    print("2. Enable AI Camera Feed")
+    print("q. Quit the Program")
+    print("------------------------------------------------")
+
+def enable_tracking(flight_controller, picam2, image_width, turn: bool):
+    # Capture metadata
+    metadata = picam2.capture_metadata()
+
+    # Parse detections from metadata
+    detections = parse_detections(metadata)
+
+    # Track object and rotate drone
+    tracking_info = {"rotation_angle": 0}
+    if detections:
+        tracking_info = track_object(detections, image_width) or tracking_info
+    
+    # Convert to JSON format
+    current_detections = []
+    for detection in detections:
+        x, y, w, h = detection.box
+        det_dict = {
+            "class_id": int(detection.category),
+            "class_name": labels[int(detection.category)] if int(detection.category) < len(labels) else
+            f"class_{int(detection.category)}",
+            "confidence": float(detection.conf),
+            "bbox": {
+                "x": float(x),
+                "y": float(y),
+                "width": float(w),
+                "height": float(h)
+            }
+        }
+        current_detections.append(det_dict)
+    
+    # Create JSON output
+    output = {
+        "timestamp": time.time(),
+        "detections": current_detections,
+        "count": len(current_detections),
+        "rotation_from_center_degrees": tracking_info["rotation_angle"],
+        "detections": current_detections
+    }
+
+    if turn:
+        flight_controller.turn(tracking_info["rotation_angle"])
+
+    # Print JSON to terminal
+    print(json.dumps(output, indent=2), flush=True)
+
+    # Small delay to avoid overwhelming output
+    time.sleep(0.5)
 
 def main():
     global picam2, imx500, intrinsics
@@ -241,10 +278,10 @@ def main():
     intrinsics = imx500.network_intrinsics
 
     # Get image dimensions
-    image_width, image_height = RESOLUTION_WIDTH, RESOLUTION_HEIGHT
+    image_width = RESOLUTION_WIDTH
     print("Image Width is: ", image_width)
 
-    # Load COCO labels
+    # Load COCO labels.
     try:
         with open("/usr/share/imx500-models/coco_labels.txt", "r") as f:
             intrinsics.labels = f.read().splitlines()
@@ -287,56 +324,29 @@ def main():
 
     if intrinsics.preserve_aspect_ratio:
         imx500.set_auto_aspect_ratio()
-    print("IMX500 Object Detection Running - Press Ctrl+C to stop", flush=True)
+    print("IMX500 Object Detection Program Running - Press Ctrl+C to stop", flush=True)
     print("-" * 60, flush=True)
 
     try:
-        while True:
-            # Capture metadata
-            metadata = picam2.capture_metadata()
+        # Print Options Menu:
+        print_menu()
+        option = input("Type and enter your selection: ")
 
-            # Parse detections from metadata
-            detections = parse_detections(metadata)
+        match option:
+            case '1':
+                while True:
+                    enable_tracking(flight_controller, picam2, image_width, turn=True)
+                    
+            case '2':
+                while True:
+                    enable_tracking(flight_controller, picam2, image_width, turn=False)
 
-            # Track object and rotate drone
-            tracking_info = {"rotation_angle": 0}
-            if detections:
-                tracking_info = track_object(detections, image_width, image_height, drone=None) or tracking_info
-            
-            # Convert to JSON format
-            current_detections = []
-            for detection in detections:
-                x, y, w, h = detection.box
-                det_dict = {
-                    "class_id": int(detection.category),
-                    "class_name": labels[int(detection.category)] if int(detection.category) < len(labels) else
-                    f"class_{int(detection.category)}",
-                    "confidence": float(detection.conf),
-                    "bbox": {
-                        "x": float(x),
-                        "y": float(y),
-                        "width": float(w),
-                        "height": float(h)
-                    }
-                }
-                current_detections.append(det_dict)
-            
-            # Create JSON output
-            output = {
-                "timestamp": time.time(),
-                "detections": current_detections,
-                "count": len(current_detections),
-                "rotation_from_center_degrees": tracking_info["rotation_angle"],
-                "detections": current_detections
-            }
-
-            flight_controller.turn(tracking_info["rotation_angle"])
-
-            # Print JSON to terminal
-            print(json.dumps(output, indent=2), flush=True)
-
-            # Small delay to avoid overwhelming output
-            time.sleep(0.5)
+            case 'q':
+                flight_controller.close()
+                picam2.stop_encoder()
+                picam2.stop()
+                print("Camera stopped.", flush=True)
+                return
 
     except KeyboardInterrupt:
         print("\nStopping object detection...", flush=True)
