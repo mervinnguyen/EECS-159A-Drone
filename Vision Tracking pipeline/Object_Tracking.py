@@ -211,14 +211,6 @@ def track_object(detections, image_width):
         "confidence": best_detection.conf
     }
 
-def print_menu():
-    print("------------------OPTIONS MENU------------------")
-    print("Type the option and hit enter.")
-    print("1. Enable Detection and Drone Tracking")
-    print("2. Enable AI Camera Feed")
-    print("q. Quit the Program")
-    print("------------------------------------------------")
-
 def enable_tracking(flight_controller, picam2, image_width, turn: bool):
     # Capture metadata
     metadata = picam2.capture_metadata()
@@ -267,6 +259,14 @@ def enable_tracking(flight_controller, picam2, image_width, turn: bool):
     # Small delay to avoid overwhelming output
     time.sleep(0.5)
 
+def print_menu():
+    print("------------------OPTIONS MENU------------------")
+    print("Type the option and hit enter.")
+    print("1. Enable Detection and Drone Tracking")
+    print("2. Enable AI Camera Feed")
+    print("q. Quit the Program")
+    print("------------------------------------------------")
+
 def main():
     global picam2, imx500, intrinsics
     
@@ -297,7 +297,9 @@ def main():
 
     # Connect to Mission Planner:
     flight_controller = DroneController('192.168.1.155', '5762')
-    flight_controller.connect()
+    if(flight_controller.connect() is False):
+        print("Program cannot connect to drone. Program exiting...")
+        return 1
 
 
     # Initialize camera
@@ -328,25 +330,50 @@ def main():
     print("-" * 60, flush=True)
 
     try:
-        # Print Options Menu:
-        print_menu()
-        option = input("Type and enter your selection: ")
+        while True:
+            print_menu()
+            try:
+                option = input("Type and enter your selection: ").strip().lower()
+            except KeyboardInterrupt:
+                print("\nStopping object detection...", flush=True)
+                break
 
-        match option:
-            case '1':
-                while True:
-                    enable_tracking(flight_controller, picam2, image_width, turn=True)
-                    
-            case '2':
-                while True:
-                    enable_tracking(flight_controller, picam2, image_width, turn=False)
+            match option:
+                case '1':
+                    print("Tracking + drone turning enabled. Press Ctrl+C to return to menu.")
+                    try:
+                        while True:
+                            enable_tracking(flight_controller, picam2, image_width, turn=True)
+                    except KeyboardInterrupt:
+                        # The reason I put this in is because when we exit out of tracking mode, the camera stops sending the feed unless I restart it
+                        picam2.stop_encoder()
+                        picam2.stop()
+                        picam2.configure(config)
+                        picam2.start()
+                        picam2.pre_callback = draw_detections
+                        picam2.start_encoder(encoder, output)
+                        print("\nReturning to options menu...", flush=True)
 
-            case 'q':
-                flight_controller.close()
-                picam2.stop_encoder()
-                picam2.stop()
-                print("Camera stopped.", flush=True)
-                return
+                case '2':
+                    print("AI camera feed enabled. Press Ctrl+C to return to menu.")
+                    try:
+                        while True:
+                            enable_tracking(flight_controller, picam2, image_width, turn=False)
+                    except KeyboardInterrupt:
+                        picam2.stop_encoder()
+                        picam2.stop()
+                        picam2.configure(config)
+                        picam2.start()
+                        picam2.pre_callback = draw_detections
+                        picam2.start_encoder(encoder, output)
+                        print("\nReturning to options menu...", flush=True)
+
+                case 'q':
+                    print("Quitting program...", flush=True)
+                    break
+
+                case _:
+                    print("Invalid option. Please enter 1, 2, or q.", flush=True)
 
     except KeyboardInterrupt:
         print("\nStopping object detection...", flush=True)
