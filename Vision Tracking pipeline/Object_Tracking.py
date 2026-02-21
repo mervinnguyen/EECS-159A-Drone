@@ -249,7 +249,7 @@ def enable_tracking(flight_controller, picam2, image_width, turn: bool):
     now = time.time()
     currentFPS = 1.0 / (now - prevTime)
     prevTime = now
-    
+
     # Capture metadata
     metadata = picam2.capture_metadata()
 
@@ -295,7 +295,7 @@ def enable_tracking(flight_controller, picam2, image_width, turn: bool):
     print(json.dumps(output, indent=2), flush=True)
 
     # Small delay to avoid overwhelming output
-    time.sleep(0.5)
+    #time.sleep(0.5)
 
 def print_menu():
     print("------------------OPTIONS MENU------------------")
@@ -306,7 +306,7 @@ def print_menu():
     print("------------------------------------------------")
 
 def main():
-    global picam2, imx500, intrinsics
+    global picam2, imx500, intrinsics, labels, currentMode
     
     # Load the object detection model (MobileNet SSD)
     model_path ="/usr/share/imx500-models/imx500_network_ssd_mobilenetv2_fpnlite_320x320_pp.rpk"
@@ -330,7 +330,6 @@ def main():
     intrinsics.update_with_defaults()
 
     # Get labels
-    global labels
     labels = get_labels()
 
     # Connect to Mission Planner:
@@ -378,6 +377,7 @@ def main():
 
             match option:
                 case '1':
+                    currentMode = "FEED + ACTIVE YAW"
                     print("Tracking + drone turning enabled. Press Ctrl+C to return to menu.")
                     try:
                         while True:
