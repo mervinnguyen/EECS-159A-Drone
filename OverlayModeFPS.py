@@ -15,7 +15,7 @@ currentFPS = 0.0
         case "2":
             currentMode = "FEED ONLY"
             while True:
-                enableTracking(flight_controller, picam2 image_width, turn = False)
+                enableTracking(flight_controller, picam2, image_width, turn = False)
         
         case "q":
             flight_controller.close()
