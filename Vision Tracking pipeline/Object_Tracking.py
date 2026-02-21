@@ -161,7 +161,7 @@ def draw_detections(request, stream="main"):
             2
         )
 
-        #Overly fps
+        #Overlay fps
         cv2.putText(
             m.array,
             f"FPS: {currentFPS: .2f}",
@@ -244,6 +244,12 @@ def track_object(detections, image_width):
     }
 
 def enable_tracking(flight_controller, picam2, image_width, turn: bool):
+    global prevTime, currentFPS
+
+    now = time.time()
+    currentFPS = 1.0 / (now - prevTime)
+    prevTime = now
+    
     # Capture metadata
     metadata = picam2.capture_metadata()
 
