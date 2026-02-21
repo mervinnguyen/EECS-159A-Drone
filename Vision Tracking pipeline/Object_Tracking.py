@@ -84,6 +84,7 @@ class DroneController:
             return False
     
     def turn(self, angle: int):
+        
         if angle < 0:
             # send counter clockwise version of command with positive angle
             self.master.mav.command_long_send(self.master.target_system, self.master.target_component, mavutil.mavlink.MAV_CMD_CONDITION_YAW, 0, abs(angle), 25, -1, 1, 0, 0, 0)
@@ -142,10 +143,36 @@ def get_labels():
 
 def draw_detections(request, stream="main"):
     """Draw detection boxes and labels onto frames before encoding."""
+    global currentMode, currentFPS
+
     if not last_detections:
         return
 
     with MappedArray(request, stream) as m:
+
+        #Overlay Mode
+        cv2.putText(
+            m.array,
+            f"MODE: {currentMode}",
+            (20, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            (0, 255, 0),
+            2
+        )
+
+        #Overly fps
+        cv2.putText(
+            m.array,
+            f"FPS: {currentFPS: .2f}",
+            (20, 60),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            (0, 255, 0),
+            2
+        )
+
+        #bounding boxes
         for detection in last_detections:
             x, y, w, h = detection.box
             x, y, w, h = int(x), int(y), int(w), int(h)
