@@ -36,6 +36,11 @@ RESOLUTION_HEIGHT = 720
 last_detections = []
 labels = []
 
+# Overlay state
+currentMode = "FEED ONLY"
+prevTime = time.time()
+currentFPS = 0.0
+
 class Detection:
     def __init__(self, coords, category, conf, metadata):
         """Create a Detection object, recording the bounding box, category
