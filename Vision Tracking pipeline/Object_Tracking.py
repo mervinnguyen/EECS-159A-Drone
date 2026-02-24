@@ -154,7 +154,7 @@ def draw_detections(request, stream="main"):
         cv2.putText(
             m.array,
             f"MODE: {currentMode}",
-            (20, 30),
+            (20, 630),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.8,
             (0, 255, 0),
@@ -165,7 +165,7 @@ def draw_detections(request, stream="main"):
         cv2.putText(
             m.array,
             f"FPS: {currentFPS: .2f}",
-            (20, 60),
+            (20, 660),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.8,
             (0, 255, 0),
