@@ -333,10 +333,10 @@ def main():
     labels = get_labels()
 
     # Connect to Mission Planner:
-    flight_controller = DroneController('192.168.1.155', '5762')
+    flight_controller = DroneController('127.0.0.1', '5678')
     if(flight_controller.connect() is False):
-        print("Program cannot connect to drone. Program exiting...")
-        return 1
+    	print("Program cannot connect to drone. Program exiting...")
+    	return 1
 
 
     # Initialize camera
