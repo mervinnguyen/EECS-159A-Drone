@@ -93,7 +93,4 @@ All living documentation for this project is maintained in Google Drive to enabl
 - 📘 System Architecture & Design Documents  
 - 📊 Test Plans, Flight Logs, and Data Analysis  
 - 📽️ Design Reviews & Final Presentation Slides  
-- 📑 Requirements, Safety Checklists, and Compliance Docs  
-
-👉 **Google Drive Folder:** https://drive.google.com/drive/folders/1I-N5GkhAKmFE1T7CpRyDYrAZDIUHNOzg?usp=sharing
-
+- 📑 Requirements, Safety Checklists, and Compliance Docs
