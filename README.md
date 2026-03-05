@@ -3,17 +3,17 @@ Welcome to the EECS 159A: Senior Design Project 1 (Drone) repository. This proje
 
 At the end of the course, our team will have successfully assembled and flown our own quadcopter, fully equipped with autonomous flight capabilities via ArduPilot.
 
-## 📌 Project Overview
+## 📌 Abstract
 
-**Course Objective:** Teach fellow students the fundamentals of drone systems (avionics, power, propulsion, control, telemetry, and safety) through theory paired with labs.
-
-**Hands-On Learning:** Each week introduces new concepts, followed by integration of software/firmware and testing of a new drone component.
-
-**Flight Demonstration:** Final evaluation requires students to showcase a fully autonomous GPS waypoint mission with telemetry feedback to a ground control station.
+Photon Flight is a FAA Group 1 fiber optic tethered drone developed for search-and-rescue operations. The drone uses a bidirectional SFP fiber module paired with single mode fiber optic cable to prevent signal interference and operate in damaged infrastructure without GPS availability. A mounted camera leverages pretrained AI models for autonomous tracking of targets and live feed video.
 
 ## 🔧 Fiber Optic Drone System Breakdown
 
-The drone is a multirotor quadcopter built using standardized department-supplied kits. The build process is broken into major subsystems:
+The drone is a custom 8-inch drone that was constructed with a combination of widely available off the shelf components and custom 3D printed enclosures. The diagram below details how major components fit together on the drone.
+
+<img width="6109" height="5374" alt="e" src="https://github.com/user-attachments/assets/7ba3364f-91c0-4ff5-98d2-8df0399958b6" />
+
+TODO: MORE TO CHANGE BELOW
 
 **1. Airframe**
 
