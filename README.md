@@ -1,96 +1,254 @@
-# EECS159A Senior Design Project (PhotonFlight)
-Welcome to the EECS 159A: Senior Design Project 1 (Drone) repository. This project guides students through the theory and hands-on practice of building, configuring, and flying a fiber optic drone from start to finish.
+# PhotonFlight: Fiber-Optic Autonomous UAV
 
-At the end of the course, our team will have successfully assembled and flown our own quadcopter, fully equipped with autonomous flight capabilities via ArduPilot.
+PhotonFlight is a **fiber-optic-tethered autonomous quadcopter** designed for operation in **RF-denied or GPS-degraded environments**.  
+The platform replaces traditional RF telemetry with a **secure bidirectional SFP fiber link**, enabling **low-latency video streaming, real-time telemetry, and reliable command/control communication** between the UAV and ground control station.
 
-## 📌 Abstract
+The system integrates **ArduPilot flight control, embedded Linux module, onboard AI vision processing, and fiber-optic networking**, demonstrating a complete embedded system spanning hardware, firmware, networking, and autonomy.
 
-Photon Flight is a FAA Group 1 fiber optic tethered drone developed for search-and-rescue operations. The drone uses a bidirectional SFP fiber module paired with single mode fiber optic cable to prevent signal interference and operate in damaged infrastructure without GPS availability. A mounted camera leverages pretrained AI models for autonomous tracking of targets and live feed video.
+---
 
-## 🔧 Fiber Optic Drone System Breakdown
+# Abstract
 
-The drone is a custom 8-inch drone that was constructed with a combination of widely available off the shelf components and custom 3D printed enclosures. The diagram below details how major components fit together on the drone.
+PhotonFlight is a **fiber-optic tethered UAV platform** developed for search-and-rescue and infrastructure inspection applications where traditional RF communication may be unreliable or unavailable.
+
+The system leverages **single-mode fiber optic communication via SFP transceivers** to provide:
+
+- RF-interference immunity  
+- secure high-bandwidth communication  
+- low-latency telemetry and video streaming  
+
+An onboard AI camera enables **real-time object detection and autonomous tracking**, while a companion computer processes video and coordinates communication with the flight controller.
+
+The result is a **robust embedded UAV platform capable of operating in communication-contested environments**.
+
+---
+
+# System Architecture
+
+PhotonFlight is composed of several integrated system layers that enable flight control, telemetry transmission, and onboard intelligence.
+
+
+Each layer performs a specific role in the overall system.
+
+| Layer | Responsibility |
+|------|------|
+| Ground Control Station | Mission planning, telemetry monitoring, system control |
+| Fiber Communication Layer | Secure telemetry and high-bandwidth video transmission |
+| Companion Computer | AI inference, video processing, communication bridging |
+| Flight Controller | Real-time stabilization, sensor fusion, flight control |
+| Motor Control | Direct actuation of propulsion system |
 
 <img width="6109" height="5374" alt="e" src="https://github.com/user-attachments/assets/7ba3364f-91c0-4ff5-98d2-8df0399958b6" />
+---
 
-TODO: MORE TO CHANGE BELOW
+# Hardware Architecture
 
-**1. Airframe**
+PhotonFlight is built using a combination of **commercial off-the-shelf components and custom fabricated hardware**.
 
-- Provides structure and mounting points for all components.
+## Airframe
 
-- Typically a lightweight carbon fiber or composite X-frame.
+The UAV uses an **8-inch quadcopter carbon fiber frame** providing structural mounting for propulsion, avionics, and communication hardware.
 
-**2. Motors & Propellers**
+Key design considerations include:
 
-- Brushless DC Motors (BLDC): Provide thrust.
+- vibration isolation
+- weight optimization
+- secure component mounting
 
-- Propellers: Sized and pitched for balance between efficiency and stability.
+---
 
-**3. Electronic Speed Controllers (ESCs)**
+## Propulsion System
 
-- Regulate motor power based on signals from the flight controller.
+The propulsion system consists of:
 
-- Handle rapid throttle adjustments for stability.
+- **Brushless DC motors (BLDC)**
+- **high-efficiency propellers**
+- **electronic speed controllers (ESCs)**
 
-**4. Power System**
+ESCs receive control signals from the flight controller to regulate thrust and maintain stability.
 
-- LiPo Battery: High-discharge power source.
+---
 
-- Power Distribution Board (PDB): Safely routes battery power to ESCs and other electronics.
+## Power System
 
-- Battery chargers & safety protocols emphasized.
+The drone is powered by a **high-discharge LiPo battery** distributed through a **Power Distribution Board (PDB)**.
 
-**5. Flight Controller (FC)**
+The power subsystem manages:
 
-- The “brain” of the drone.
+- high-current delivery
+- electrical isolation
+- voltage regulation for onboard electronics
 
-- Runs ArduPilot firmware for stabilization, flight modes, GPS navigation, and waypoint missions.
+Battery safety procedures and charge management protocols are implemented for safe operation.
 
-- Integrates IMU (gyroscope + accelerometer), compass, barometer, and GPS.
+---
 
-**6. Telemetry & Ground Control Station (GCS)**
+# Flight Control System
 
-- Telemetry radios send real-time flight data to the GCS.
+The UAV uses an **ArduPilot-based flight controller** responsible for deterministic flight control.
 
-- GCS software (e.g., Mission Planner or QGroundControl) is used for mission planning, waypoint upload, and monitoring.
+Responsibilities include:
 
-**7. IR Camera**
+- attitude stabilization
+- sensor fusion
+- waypoint navigation
+- flight mode control
+- failsafe management
 
-- Infrared camera module for thermal imaging and low-light vision.
+The controller integrates multiple onboard sensors:
 
-- Enables applications such as obstacle detection, search-and-rescue, and environmental monitoring.
+- IMU (accelerometer + gyroscope)
+- magnetometer
+- barometer
+- GPS receiver
 
-- Data can be processed onboard (via Raspberry Pi) or streamed to the ground station.
+Flight control commands are communicated via **MAVLink protocol**.
 
-**8. AI Camera**
+---
 
-- Equipped with machine learning capabilities for object detection and recognition.
+# Companion Computer
 
-- Supports autonomous decision-making in tasks such as target tracking and path planning.
+A **Raspberry Pi 4** acts as the onboard companion computer, providing high-level processing capabilities.
 
-- Can integrate with ROS or other AI frameworks for advanced autonomy.
+The companion computer is responsible for:
 
-**9. Raspberry Pi 4 (Companion Computer)**
+- AI inference and object detection
+- video encoding and streaming
+- communication routing between sensors and ground station
+- system coordination
 
-- Acts as a high-performance companion computer to the flight controller.
+The Raspberry Pi communicates with the flight controller through **MAVLink interfaces**.
 
-- Enables advanced onboard processing, including computer vision and AI algorithms.
+---
 
-- Provides additional connectivity for sensors, cameras, and custom applications. 
-  
-**10. Safety Systems**
+# Fiber-Optic Communication Pipeline
 
-- Geofencing, return-to-launch (RTL), and emergency failsafes.
+PhotonFlight replaces traditional RF telemetry with a **fiber-optic communication architecture**.
 
-- Preflight checklist required before each flight.
+The system uses:
+
+- **SFP transceivers**
+- **single-mode fiber optic cable**
+- **media converters**
+
+This communication architecture provides several advantages:
+
+- immunity to RF interference
+- secure communication channel
+- high-bandwidth data transmission
+- reduced telemetry latency
+
+Data transmitted through the fiber link includes:
+
+- MAVLink telemetry
+- AI camera video feed
+- mission control commands
+
+---
+
+# Vision System
+
+PhotonFlight incorporates two vision modules enabling perception capabilities.
+
+## Infrared Camera
+
+The infrared camera enables **thermal imaging and low-light operation**, allowing the UAV to function in environments such as:
+
+- disaster response zones
+- low visibility environments
+- nighttime search-and-rescue missions
+
+---
+
+## AI Camera
+
+The onboard AI camera performs **real-time object detection and tracking** using pretrained neural network models.
+
+Capabilities include:
+
+- autonomous target tracking
+- real-time object detection
+- visual feedback to ground operators
+
+Inference can be executed onboard or streamed for external processing.
+
+---
+
+# Ground Control Station
+
+A ground control station running **Mission Planner or QGroundControl** enables operators to:
+
+- monitor real-time telemetry
+- upload mission waypoints
+- visualize system status
+- issue control commands
+
+Communication between the UAV and the ground station occurs over the fiber link.
+
+---
+
+# Safety Systems
+
+Several redundant safety mechanisms are implemented to ensure safe operation.
+
+These include:
+
+- geofencing
+- return-to-launch (RTL)
+- emergency failsafe procedures
+- pre-flight validation checklists
+
+These systems mitigate risk during autonomous flight operations.
+
+---
+
+# Key Technologies
+
+PhotonFlight integrates multiple hardware and software technologies:
+
+**Flight Control**
+- ArduPilot
+- MAVLink
+
+**Embedded Systems**
+- Raspberry Pi 4
+- embedded Linux
+
+**Networking**
+- fiber-optic SFP communication
+- telemetry streaming
+
+**Perception**
+- onboard AI camera
+- computer vision inference
+
+---
+
+# Documentation & Project Resources
+
+Project documentation and development artifacts are maintained collaboratively.
+
+Resources include:
+
+- system architecture documentation
+- hardware integration notes
+- flight test logs
+- telemetry data analysis
+- design review presentations
+- safety procedures and compliance documentation
+
+---
+
+# Project Focus
+
+PhotonFlight demonstrates the integration of:
+
+- embedded flight control systems  
+- secure communication infrastructure  
+- onboard AI perception  
+
+into a UAV platform capable of operating in **RF-contested or GPS-degraded environments**.
+
+This project highlights the application of **embedded systems engineering, networking architecture, and autonomous robotics** in real-world mission scenarios.
 
 
-  ## 📄 Documentation & Project Resources (Google Drive)
-
-All living documentation for this project is maintained in Google Drive to enable real-time collaboration and version history.
-
-- 📘 System Architecture & Design Documents  
-- 📊 Test Plans, Flight Logs, and Data Analysis  
-- 📽️ Design Reviews & Final Presentation Slides  
-- 📑 Requirements, Safety Checklists, and Compliance Docs
