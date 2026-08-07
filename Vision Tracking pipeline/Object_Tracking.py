@@ -366,6 +366,12 @@ def main():
     print("IMX500 Object Detection Program Running - Press Ctrl+C to stop", flush=True)
     print("-" * 60, flush=True)
 
+    # Block until the camera delivers its first frame — this guarantees all async
+    # startup output (loading bar, camera stats) has finished before the menu prints
+    picam2.capture_metadata()
+    sys.stdout.flush()
+    sys.stderr.flush()
+
     try:
         while True:
             print_menu()
@@ -390,6 +396,10 @@ def main():
                         picam2.start()
                         picam2.pre_callback = draw_detections
                         picam2.start_encoder(encoder, output)
+                        # Block until camera is delivering frames before returning to menu
+                        picam2.capture_metadata()
+                        sys.stdout.flush()
+                        sys.stderr.flush()
                         print("\nReturning to options menu...", flush=True)
 
                 case '2':
@@ -404,6 +414,10 @@ def main():
                         picam2.start()
                         picam2.pre_callback = draw_detections
                         picam2.start_encoder(encoder, output)
+                        # Block until camera is delivering frames before returning to menu
+                        picam2.capture_metadata()
+                        sys.stdout.flush()
+                        sys.stderr.flush()
                         print("\nReturning to options menu...", flush=True)
 
                 case 'q':

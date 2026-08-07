@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PHOTON FLIGHT — Fiber-Optic UAV</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #020b14;
+    --panel: #061828;
+    --border: #0a3a5c;
+    --accent: #00d4ff;
+    --accent2: #ff6b00;
+    --accent3: #39ff14;
+    --text: #b8d4e8;
+    --dim: #3a6080;
+    --glow: 0 0 20px #00d4ff55;
+    --glow2: 0 0 20px #ff6b0055;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Exo 2',sans-serif;
+    overflow-x:hidden;
+    cursor:crosshair;
+  }
+  #stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+  body::after{
+    content:'';position:fixed;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent);
+    animation:scan 6s linear infinite;z-index:9999;opacity:.35;
+  }
+  @keyframes scan{0%{top:-2px}100%{top:100vh}}
+
+  nav{
+    position:fixed;top:0;left:0;right:0;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 40px;background:rgba(2,11,20,.9);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:1000;
+  }
+  .nav-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;letter-spacing:.2em;color:var(--accent);text-shadow:var(--glow);}
+  .nav-logo span{color:var(--accent2);}
+  .nav-links{display:flex;gap:24px;}
+  .nav-links a{font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--dim);text-decoration:none;letter-spacing:.1em;transition:.2s;}
+  .nav-links a:hover{color:var(--accent);}
+  .nav-status{font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--accent3);letter-spacing:.08em;}
+  .nav-status::before{content:'● ';animation:blink 1.2s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+  section{position:relative;z-index:1;}
+
+  /* HERO */
+  #hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 40px 60px;text-align:center;overflow:hidden;}
+  .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,212,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.04) 1px,transparent 1px);background-size:60px 60px;animation:gridpulse 8s ease-in-out infinite;}
+  @keyframes gridpulse{0%,100%{opacity:.5}50%{opacity:.9}}
+  .hero-rings{position:absolute;width:700px;height:700px;border-radius:50%;border:1px solid rgba(0,212,255,.07);top:50%;left:50%;transform:translate(-50%,-50%);animation:expand 4s ease-out infinite;}
+  .hero-rings:nth-child(2){animation-delay:1.3s;width:900px;height:900px;}
+  .hero-rings:nth-child(3){animation-delay:2.6s;width:1100px;height:1100px;}
+  @keyframes expand{0%{opacity:.5;transform:translate(-50%,-50%) scale(.8)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}
+  .hero-badge{font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.3em;color:var(--accent3);border:1px solid var(--accent3);padding:4px 16px;margin-bottom:24px;display:inline-block;}
+  .hero-title{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(2.5rem,7vw,6rem);line-height:1;letter-spacing:.05em;color:#fff;text-shadow:0 0 40px rgba(0,212,255,.5),0 0 80px rgba(0,212,255,.2);margin-bottom:8px;}
+  .hero-title span{color:var(--accent);}
+  .hero-sub{font-family:'Orbitron',monospace;font-size:clamp(.75rem,1.8vw,1.1rem);color:var(--accent2);letter-spacing:.35em;margin-bottom:32px;text-shadow:var(--glow2);}
+  .hero-desc{max-width:640px;font-size:.95rem;line-height:1.7;color:var(--text);margin:0 auto 40px;opacity:.85;}
+  .hero-stats{display:flex;gap:36px;justify-content:center;flex-wrap:wrap;margin-bottom:48px;}
+  .stat{text-align:center;}
+  .stat-num{font-family:'Orbitron',monospace;font-size:1.7rem;font-weight:700;color:var(--accent);display:block;}
+  .stat-label{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;}
+  .cta-row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
+  .btn{font-family:'Orbitron',monospace;font-size:.72rem;letter-spacing:.15em;padding:12px 28px;cursor:pointer;text-decoration:none;transition:.25s;position:relative;overflow:hidden;}
+  .btn-primary{background:transparent;color:var(--accent);border:1px solid var(--accent);text-shadow:var(--glow);box-shadow:var(--glow);}
+  .btn-primary::before{content:'';position:absolute;inset:0;background:var(--accent);transform:translateX(-100%);transition:.25s;z-index:-1;opacity:.15;}
+  .btn-primary:hover::before{transform:translateX(0);}
+  .btn-primary:hover{color:#fff;box-shadow:0 0 30px #00d4ff88;}
+  .btn-secondary{background:transparent;color:var(--accent2);border:1px solid var(--accent2);}
+  .btn-secondary:hover{background:rgba(255,107,0,.1);box-shadow:var(--glow2);}
+  .drone-viz{width:260px;height:200px;margin:0 auto 40px;position:relative;}
+  .drone-body{animation:hoverdrone 3s ease-in-out infinite;}
+  @keyframes hoverdrone{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+  /* SECTION HEADERS */
+  .section-header{text-align:center;padding:80px 40px 48px;}
+  .section-tag{font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--accent3);letter-spacing:.3em;text-transform:uppercase;margin-bottom:12px;}
+  .section-title{font-family:'Orbitron',monospace;font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;color:#fff;letter-spacing:.05em;}
+  .section-title span{color:var(--accent);}
+  .section-line{width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin:16px auto 0;}
+
+  /* CARDS */
+  .cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;max-width:1200px;margin:0 auto;padding:0 40px 80px;}
+  .card{background:var(--panel);border:1px solid var(--border);padding:28px 24px;position:relative;overflow:hidden;transition:.3s;cursor:default;}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);transform:scaleX(0);transition:.3s;}
+  .card:hover::before{transform:scaleX(1);}
+  .card:hover{border-color:var(--accent);box-shadow:var(--glow);}
+  .card-icon{font-size:2rem;margin-bottom:16px;}
+  .card-title{font-family:'Orbitron',monospace;font-size:.82rem;font-weight:700;color:var(--accent);letter-spacing:.1em;margin-bottom:10px;}
+  .card-text{font-size:.82rem;line-height:1.6;color:var(--text);}
+  .card-num{position:absolute;top:16px;right:16px;font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--border);}
+
+  /* ARCHITECTURE */
+  #architecture{padding-bottom:80px;}
+  .arch-container{max-width:1100px;margin:0 auto;padding:0 40px;}
+  .flow-diagram{background:var(--panel);border:1px solid var(--border);padding:40px;margin-bottom:32px;position:relative;overflow:hidden;}
+  .flow-diagram::before{content:'PHOTON FLIGHT SYSTEM ARCHITECTURE — WINTER 2025';position:absolute;top:12px;left:16px;font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--border);letter-spacing:.15em;}
+  .flow-diagram::after{content:'UC IRVINE EECS // SAMUELI SCHOOL OF ENGINEERING';position:absolute;bottom:12px;right:16px;font-family:'Share Tech Mono',monospace;font-size:.55rem;color:var(--border);letter-spacing:.08em;}
+  .diagram-svg{width:100%;height:auto;overflow:visible;}
+
+  /* TABS */
+  .tab-bar{display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto;}
+  .tab-btn{font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.1em;padding:12px 22px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--dim);cursor:pointer;transition:.2s;white-space:nowrap;}
+  .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .tab-btn:hover:not(.active){color:var(--text);}
+  .tab-panel{display:none;background:var(--panel);border:1px solid var(--border);border-top:none;padding:32px;}
+  .tab-panel.active{display:block;}
+  .subsystem-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  @media(max-width:600px){.subsystem-grid{grid-template-columns:1fr;}}
+  .sub-block{background:rgba(0,212,255,.03);border-left:2px solid var(--accent);padding:16px 20px;}
+  .sub-block.orange{border-left-color:var(--accent2);}
+  .sub-block.green{border-left-color:var(--accent3);}
+  .sub-block.red{border-left-color:#ff2244;}
+  .sub-title{font-family:'Orbitron',monospace;font-size:.75rem;color:var(--accent);font-weight:700;margin-bottom:10px;letter-spacing:.08em;}
+  .sub-block.orange .sub-title{color:var(--accent2);}
+  .sub-block.green .sub-title{color:var(--accent3);}
+  .sub-block.red .sub-title{color:#ff2244;}
+  .sub-list{list-style:none;font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--text);}
+  .sub-list li{padding:3px 0;padding-left:14px;position:relative;}
+  .sub-list li::before{content:'▸';position:absolute;left:0;color:var(--dim);}
+  .chip-tag{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--accent2);border:1px solid rgba(255,107,0,.3);padding:1px 8px;margin-top:4px;border-radius:2px;}
+
+  /* TELEMETRY */
+  #telemetry{padding-bottom:80px;}
+  .telem-container{max-width:1100px;margin:0 auto;padding:0 40px;}
+  .telem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;}
+  @media(max-width:700px){.telem-grid{grid-template-columns:1fr 1fr;}}
+  @media(max-width:400px){.telem-grid{grid-template-columns:1fr;}}
+  .telem-panel{background:var(--panel);border:1px solid var(--border);padding:20px;position:relative;}
+  .telem-label{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
+  .telem-value{font-family:'Orbitron',monospace;font-size:1.9rem;font-weight:700;color:var(--accent);}
+  .telem-unit{font-size:.75rem;color:var(--dim);margin-left:3px;}
+  .telem-bar{height:3px;background:rgba(0,212,255,.1);margin-top:10px;border-radius:2px;overflow:hidden;}
+  .telem-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 1s ease;box-shadow:0 0 6px var(--accent);}
+  .telem-fill.orange{background:var(--accent2);box-shadow:0 0 6px var(--accent2);}
+  .telem-fill.green{background:var(--accent3);box-shadow:0 0 6px var(--accent3);}
+  .live-badge{position:absolute;top:14px;right:14px;font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--accent3);letter-spacing:.08em;}
+  .live-badge::before{content:'◉ ';animation:blink 1s infinite;}
+  .console{background:#000;border:1px solid var(--border);padding:18px;font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--accent3);height:180px;overflow-y:auto;line-height:1.8;}
+  .console-line{opacity:0;animation:fadein .3s ease forwards;}
+  @keyframes fadein{to{opacity:1}}
+
+  /* RESULTS */
+  #results{padding-bottom:80px;}
+  .results-container{max-width:1100px;margin:0 auto;padding:0 40px;}
+  .results-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  @media(max-width:700px){.results-grid{grid-template-columns:1fr;}}
+  .result-panel{background:var(--panel);border:1px solid var(--border);padding:28px;}
+  .result-panel-title{font-family:'Orbitron',monospace;font-size:.8rem;color:var(--accent);font-weight:700;letter-spacing:.12em;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+  .result-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(10,58,92,.5);font-family:'Share Tech Mono',monospace;font-size:.72rem;}
+  .result-row:last-child{border-bottom:none;}
+  .result-key{color:var(--dim);}
+  .result-val{color:#fff;font-weight:600;}
+  .result-val.green{color:var(--accent3);}
+  .result-val.cyan{color:var(--accent);}
+  .result-val.orange{color:var(--accent2);}
+
+  /* FIBER */
+  #fiber{padding-bottom:80px;}
+  .fiber-container{max-width:1100px;margin:0 auto;padding:0 40px;}
+  .fiber-comparison{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
+  @media(max-width:600px){.fiber-comparison{grid-template-columns:1fr;}}
+  .compare-col{background:var(--panel);border:1px solid var(--border);padding:28px;}
+  .compare-col.winner{border-color:var(--accent3);background:rgba(57,255,20,.03);}
+  .compare-head{font-family:'Orbitron',monospace;font-size:.78rem;font-weight:700;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+  .compare-head.cyan{color:var(--accent);}
+  .compare-head.dim{color:var(--dim);}
+  .compare-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;font-size:.8rem;line-height:1.5;}
+  .ci-icon{font-size:.9rem;flex-shrink:0;margin-top:2px;}
+
+  /* TEAM */
+  #team{padding-bottom:80px;}
+  .team-container{max-width:1000px;margin:0 auto;padding:0 40px;}
+  .team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;}
+  .team-card{background:var(--panel);border:1px solid var(--border);padding:24px 18px;text-align:center;transition:.3s;position:relative;overflow:hidden;}
+  .team-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,212,255,.06) 0%,transparent 70%);opacity:0;transition:.3s;}
+  .team-card:hover::before{opacity:1;}
+  .team-card:hover{border-color:var(--accent);}
+  .team-avatar{width:56px;height:56px;border-radius:50%;background:var(--border);border:2px solid var(--dim);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-weight:700;font-size:1rem;color:var(--accent);transition:.3s;}
+  .team-card:hover .team-avatar{border-color:var(--accent);box-shadow:var(--glow);}
+  .team-name{font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;color:#fff;margin-bottom:5px;}
+  .team-role{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--accent);letter-spacing:.08em;margin-bottom:8px;}
+  .team-contrib{font-size:.75rem;color:var(--dim);line-height:1.5;}
+  .advisor-badge{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--accent2);border:1px solid var(--accent2);padding:2px 8px;margin-bottom:8px;}
+
+  footer{border-top:1px solid var(--border);padding:40px;text-align:center;font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--dim);letter-spacing:.1em;}
+  footer .footer-logo{font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:900;color:var(--accent);text-shadow:var(--glow);margin-bottom:12px;}
+
+  .reveal{opacity:0;transform:translateY(28px);transition:.65s ease;}
+  .reveal.visible{opacity:1;transform:translateY(0);}
+
+  /* BOM TABLE */
+  .bom-table{width:100%;border-collapse:collapse;font-family:'Share Tech Mono',monospace;font-size:.7rem;}
+  .bom-table th{background:rgba(0,212,255,.08);color:var(--accent);padding:10px 14px;text-align:left;letter-spacing:.1em;border-bottom:1px solid var(--border);}
+  .bom-table td{padding:9px 14px;border-bottom:1px solid rgba(10,58,92,.5);color:var(--text);}
+  .bom-table tr:hover td{background:rgba(0,212,255,.03);}
+  .bom-table td:first-child{color:var(--dim);}
+  .bom-wrap{background:var(--panel);border:1px solid var(--border);overflow-x:auto;margin-top:24px;}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+
+<nav>
+  <div class="nav-logo">PHOTON<span>FLIGHT</span></div>
+  <div class="nav-links">
+    <a href="#overview">OVERVIEW</a>
+    <a href="#architecture">ARCHITECTURE</a>
+    <a href="#telemetry">TELEMETRY</a>
+    <a href="#results">RESULTS</a>
+    <a href="#bom">HARDWARE</a>
+    <a href="#team">TEAM</a>
+  </div>
+  <div class="nav-status">SYSTEM NOMINAL</div>
+</nav>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-rings"></div><div class="hero-rings"></div><div class="hero-rings"></div>
+
+  <div class="drone-viz">
+    <svg viewBox="0 0 260 200" xmlns="http://www.w3.org/2000/svg">
+      <path d="M130 158 Q145 175 160 195" stroke="#00d4ff" stroke-width="1.5" fill="none" opacity=".7" stroke-dasharray="200" stroke-dashoffset="0"/>
+      <path d="M130 158 Q145 175 160 195" stroke="#00d4ff" stroke-width="5" fill="none" opacity=".12"/>
+      <g class="drone-body" transform-origin="130 100">
+        <line x1="80" y1="94" x2="130" y2="100" stroke="#0a3a5c" stroke-width="7" stroke-linecap="round"/>
+        <line x1="180" y1="94" x2="130" y2="100" stroke="#0a3a5c" stroke-width="7" stroke-linecap="round"/>
+        <line x1="80" y1="116" x2="130" y2="100" stroke="#0a3a5c" stroke-width="7" stroke-linecap="round"/>
+        <line x1="180" y1="116" x2="130" y2="100" stroke="#0a3a5c" stroke-width="7" stroke-linecap="round"/>
+        <line x1="80" y1="94" x2="130" y2="100" stroke="#00d4ff" stroke-width="1" opacity=".35"/>
+        <line x1="180" y1="94" x2="130" y2="100" stroke="#00d4ff" stroke-width="1" opacity=".35"/>
+        <line x1="80" y1="116" x2="130" y2="100" stroke="#00d4ff" stroke-width="1" opacity=".35"/>
+        <line x1="180" y1="116" x2="130" y2="100" stroke="#00d4ff" stroke-width="1" opacity=".35"/>
+        <!-- Motors -->
+        <circle cx="80" cy="94" r="12" fill="#061828" stroke="#00d4ff" stroke-width="1.5"/>
+        <circle cx="180" cy="94" r="12" fill="#061828" stroke="#00d4ff" stroke-width="1.5"/>
+        <circle cx="80" cy="116" r="12" fill="#061828" stroke="#00d4ff" stroke-width="1.5"/>
+        <circle cx="180" cy="116" r="12" fill="#061828" stroke="#00d4ff" stroke-width="1.5"/>
+        <!-- Props -->
+        <line x1="62" y1="94" x2="98" y2="94" stroke="#00d4ff" stroke-width="2.5" opacity=".85"/>
+        <line x1="162" y1="94" x2="198" y2="94" stroke="#00d4ff" stroke-width="2.5" opacity=".85"/>
+        <line x1="62" y1="116" x2="98" y2="116" stroke="#00d4ff" stroke-width="2.5" opacity=".85"/>
+        <line x1="162" y1="116" x2="198" y2="116" stroke="#00d4ff" stroke-width="2.5" opacity=".85"/>
+        <!-- Body - Matek F405 frame (8" YoungRC) -->
+        <rect x="112" y="87" width="36" height="26" rx="5" fill="#061828" stroke="#00d4ff" stroke-width="1.5"/>
+        <rect x="118" y="93" width="24" height="14" rx="3" fill="#0a3a5c"/>
+        <!-- FC indicator -->
+        <circle cx="130" cy="100" r="3" fill="#00d4ff" opacity=".9"/>
+        <circle cx="130" cy="100" r="7" fill="none" stroke="#00d4ff" stroke-width=".6" opacity=".4"/>
+        <!-- RPi AI Camera - orange accent -->
+        <rect x="122" y="113" width="16" height="10" rx="2" fill="#061828" stroke="#ff6b00" stroke-width="1.2"/>
+        <circle cx="130" cy="118" r="3" fill="#ff6b00" opacity=".85"/>
+        <!-- GPS standoff top -->
+        <line x1="130" y1="87" x2="130" y2="78" stroke="#39ff14" stroke-width="1.5" opacity=".7"/>
+        <circle cx="130" cy="75" r="4" fill="#061828" stroke="#39ff14" stroke-width="1"/>
+        <!-- Fiber spool (bottom, custom 3D printed) -->
+        <rect x="120" y="108" width="20" height="7" rx="3.5" fill="#0a3a5c" stroke="#00d4ff" stroke-width=".8"/>
+        <!-- Status LED -->
+        <circle cx="116" cy="91" r="2.2" fill="#39ff14">
+          <animate attributeName="opacity" values="1;0.2;1" dur="1.2s" repeatCount="indefinite"/>
+        </circle>
+        <!-- Media converter rack label -->
+        <text x="130" y="105" font-family="Share Tech Mono" font-size="4.5" fill="#3a6080" text-anchor="middle">MATEK F405</text>
+      </g>
+      <circle cx="130" cy="100" r="32" fill="none" stroke="#00d4ff" stroke-width=".5" opacity=".3">
+        <animate attributeName="r" values="32;65;32" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.3;0;0.3" dur="3s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+  </div>
+
+  <!--<div class="hero-badge">UCI Samueli School of Engineering — EECS 159A/B Senior Design</div>-->
+  <h1 class="hero-title">PHOTON<br/><span>FLIGHT</span></h1>
+  <p class="hero-sub">Fiber-Optic Tethered Autonomous Quadcopter</p>
+  <p class="hero-desc">
+    FAA Group 1 fiber-optic tethered drone for search-and-rescue operations. 
+    Uses a bidirectional SFP fiber module with single-mode OS2 fiber to prevent signal interference, 
+    stream live AI-processed video, and operate in GPS-denied or damaged infrastructure environments.
+  </p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-num">150ft</span><span class="stat-label">Fiber Tether Flown</span></div>
+    <div class="stat"><span class="stat-num">2–4ms</span><span class="stat-label">Video Latency</span></div>
+    <div class="stat"><span class="stat-num">720p</span><span class="stat-label">Live Video @ 30fps</span></div>
+    <div class="stat"><span class="stat-num">4.49:1</span><span class="stat-label">Thrust-to-Weight</span></div>
+    <div class="stat"><span class="stat-num">75.86%</span><span class="stat-label">Object Detection Accuracy</span></div>
+  </div>
+  <div class="cta-row">
+    <a href="#architecture" class="btn btn-primary">SYSTEM ARCHITECTURE</a>
+    <a href="https://github.com/mervinnguyen/photonflight_fiber_optic_drone" class="btn btn-secondary" target="_blank">GITHUB REPO</a>
+  </div>
+</section>
+
+<!-- ═══════════════ OVERVIEW ═══════════════ -->
+<section id="overview">
+  <div class="section-header reveal">
+    <div class="section-tag">// MISSION BRIEFING</div>
+    <h2 class="section-title">SYSTEM <span>OVERVIEW</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="cards-grid">
+    <div class="card reveal">
+      <div class="card-num">01</div>
+      <div class="card-icon">🚁</div>
+      <div class="card-title">QUADCOPTER PLATFORM</div>
+      <div class="card-text">YoungRC 8" X-frame with Matek F405-WMN flight controller, Hobbywing XRotor G2 Micro 65A 6S 4-in-1 ESC, and four LigPower F100 (2810) FPV motors with Gemfan 8145 3-blade props. Powered by Zeee 6S 5200mAh 100C LiPo.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-num">02</div>
+      <div class="card-icon">🧠</div>
+      <div class="card-title">ARDUPILOT FLIGHT CONTROL</div>
+      <div class="card-text">Matek F405-WMN running ArduCopter v4.5.7 firmware. BLHeli_32/AM32 ESC firmware on HobbyWing XRotors. MAVLink 2.0 over UDP/TCP for telemetry and command, bridged by Raspberry Pi 4B via UART.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-num">03</div>
+      <div class="card-icon">💡</div>
+      <div class="card-title">FIBER-OPTIC TETHER</div>
+      <div class="card-text">Bidirectional 1000BASE-BX SFP BiDi transceivers (TX 1310nm / RX 1550nm) over a single-strand OS2 simplex LC-UPC SMF fiber patch cable — 150ft flown in demonstration. Full-duplex gigabit, zero EMI, unjammable.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-num">04</div>
+      <div class="card-icon">👁️</div>
+      <div class="card-title">RASPBERRY PI AI CAMERA</div>
+      <div class="card-text">IMX500 sensor with onboard AI accelerator running YOLOv2 at up to 35 FPS — no external compute. PiCamera2 + TensorFlow Lite runtime. JSON output → pymavlink for autonomous yaw tracking. 75.86% object detection accuracy over 6 trials.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-num">05</div>
+      <div class="card-icon">📡</div>
+      <div class="card-title">VIDEO & TELEMETRY PIPELINE</div>
+      <div class="card-text">GStreamer 1.22+ H.264 encoding pipeline at 720p/30fps, transported over RTP/UDP through fiber to Mission Planner v1.3. MAVLink telemetry channel runs simultaneously on the same fiber via TCP/IP static IP. 2–4ms latency.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-num">06</div>
+      <div class="card-icon">🛡️</div>
+      <div class="card-title">3D PRINTED ASSEMBLIES</div>
+      <div class="card-text">Custom SolidWorks-designed, FDM-printed parts on Prusa i3 MK3S+ via PrusaSlicer: fiber spool mechanism (underside-mounted), media rack housing Raspberry Pi + SFP converter, battery mount with GPS/compass standoff, ESC and camera brackets.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ ARCHITECTURE ═══════════════ -->
+<section id="architecture">
+  <div class="section-header reveal">
+    <div class="section-tag">// DIAGRAM FLOW</div>
+    <h2 class="section-title">SYSTEM <span>ARCHITECTURE</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="arch-container">
+
+    <!-- MAIN SYSTEM BLOCK DIAGRAM (from poster / Fig 2 / Image 3) -->
+    <div class="flow-diagram reveal">
+      <svg class="diagram-svg" viewBox="0 0 1020 540" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#00d4ff"/></marker>
+          <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#ff6b00"/></marker>
+          <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#39ff14"/></marker>
+          <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="c"/><feMerge><feMergeNode in="c"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+
+        <!-- ── LABELS ── -->
+        <text x="180" y="22" font-family="Share Tech Mono" font-size="8" fill="#3a6080" text-anchor="middle" letter-spacing="2">〈 DRONE PLATFORM 〉</text>
+        <text x="740" y="22" font-family="Share Tech Mono" font-size="8" fill="#3a6080" text-anchor="middle" letter-spacing="2">〈 GROUND STATION 〉</text>
+        <text x="500" y="22" font-family="Share Tech Mono" font-size="8" fill="#00d4ff" text-anchor="middle" letter-spacing="2">— FIBER OPTIC LINK —</text>
+
+        <!-- ═══ DRONE SIDE (left) ═══ -->
+
+        <!-- Matek F405 Flight Controller -->
+        <rect x="20" y="40" width="160" height="50" rx="4" fill="#0a3a5c" stroke="#ff6b00" stroke-width="1.5"/>
+        <text x="100" y="60" font-family="Share Tech Mono" font-size="8.5" fill="#b8d4e8" text-anchor="middle">MATEK F405-WMN</text>
+        <text x="100" y="72" font-family="Share Tech Mono" font-size="7.5" fill="#ff6b00" text-anchor="middle">Flight Controller</text>
+        <text x="100" y="82" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">ArduCopter 4.5.7 | MAVLink 2.0</text>
+
+        <!-- Raspberry Pi 4B -->
+        <rect x="20" y="120" width="160" height="54" rx="4" fill="#0a3a5c" stroke="#39ff14" stroke-width="1.5"/>
+        <text x="100" y="140" font-family="Share Tech Mono" font-size="8.5" fill="#b8d4e8" text-anchor="middle">RASPBERRY PI 4B</text>
+        <text x="100" y="152" font-family="Share Tech Mono" font-size="7.5" fill="#39ff14" text-anchor="middle">Companion Computer</text>
+        <text x="100" y="163" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">GStreamer | pymavlink | libcamera</text>
+
+        <!-- IMX500 AI Camera -->
+        <rect x="20" y="210" width="155" height="50" rx="4" fill="#0a3a5c" stroke="#ff6b00" stroke-width="1.3"/>
+        <text x="97" y="229" font-family="Share Tech Mono" font-size="8.5" fill="#b8d4e8" text-anchor="middle">RPi AI CAMERA (IMX500)</text>
+        <text x="97" y="241" font-family="Share Tech Mono" font-size="7" fill="#ff6b00" text-anchor="middle">AI Accelerator Onboard</text>
+        <text x="97" y="253" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">YOLOv2 | 35 FPS | TFLite Runtime</text>
+
+        <!-- ESC / Motors -->
+        <rect x="20" y="296" width="155" height="44" rx="4" fill="#0a3a5c" stroke="#ff6b00" stroke-width="1"/>
+        <text x="97" y="314" font-family="Share Tech Mono" font-size="8.5" fill="#b8d4e8" text-anchor="middle">HOBBYWING 65A ESC</text>
+        <text x="97" y="325" font-family="Share Tech Mono" font-size="7" fill="#3a6080" text-anchor="middle">4-in-1 AM32 | DSHOT</text>
+        <text x="97" y="335" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">→ 4× LigPower F100 (2810) Motors</text>
+
+        <!-- Battery / Power -->
+        <rect x="20" y="374" width="155" height="44" rx="4" fill="#0a3a5c" stroke="#ff6b00" stroke-width="1"/>
+        <text x="97" y="392" font-family="Share Tech Mono" font-size="8.5" fill="#b8d4e8" text-anchor="middle">ZEEE 6S 5200mAh 100C</text>
+        <text x="97" y="403" font-family="Share Tech Mono" font-size="7" fill="#3a6080" text-anchor="middle">LiPo Battery + DC-DC Buck Conv.</text>
+        <text x="97" y="413" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">MP1584EN → SFP Media Converter</text>
+
+        <!-- SFP / Media Converter on DRONE -->
+        <rect x="20" y="452" width="155" height="44" rx="4" fill="#0a3a5c" stroke="#00d4ff" stroke-width="1.5"/>
+        <text x="97" y="470" font-family="Share Tech Mono" font-size="8.5" fill="#b8d4e8" text-anchor="middle">SFP MEDIA CONVERTER</text>
+        <text x="97" y="481" font-family="Share Tech Mono" font-size="7.5" fill="#00d4ff" text-anchor="middle">(Drone side)</text>
+        <text x="97" y="491" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">1000BASE-BX-U TX1310/RX1550</text>
+
+        <!-- Internal drone arrows -->
+        <!-- FC ↔ RPi (UART) -->
+        <line x1="100" y1="90" x2="100" y2="118" stroke="#ff6b00" stroke-width="1.2" marker-end="url(#a2)"/>
+        <line x1="110" y1="118" x2="110" y2="90" stroke="#00d4ff" stroke-width=".8" marker-end="url(#a1)" stroke-dasharray="3,2" opacity=".6"/>
+        <text x="120" y="108" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080">UART</text>
+        <!-- RPi ← Camera (CSI) -->
+        <line x1="97" y1="210" x2="97" y2="175" stroke="#ff6b00" stroke-width="1.2" marker-end="url(#a2)"/>
+        <text x="100" y="198" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080">CSI</text>
+        <!-- RPi → Media Converter (Ethernet) -->
+        <line x1="100" y1="174" x2="100" y2="450" stroke="#00d4ff" stroke-width="1.2" marker-end="url(#a1)" stroke-dasharray="5,3" opacity=".7" transform="translate(80,0)"/>
+        <text x="182" y="330" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" transform="rotate(-90 182 330)">Ethernet</text>
+        <!-- Battery → ESC -->
+        <line x1="97" y1="418" x2="97" y2="450" stroke="#ff6b00" stroke-width="1" marker-end="url(#a2)"/>
+        <!-- ESC ← Battery -->
+        <line x1="97" y1="374" x2="97" y2="340" stroke="#ff6b00" stroke-width="1" marker-end="url(#a2)"/>
+
+        <!-- ═══ FIBER LINK (center) ═══ -->
+        <rect x="380" y="200" width="250" height="130" rx="4" fill="#020b14" stroke="#00d4ff" stroke-width="2"/>
+        <text x="505" y="222" font-family="Orbitron" font-size="9" fill="#00d4ff" text-anchor="middle" filter="url(#glow)" letter-spacing="2">FIBER-OPTIC TETHER</text>
+        <line x1="390" y1="244" x2="620" y2="244" stroke="#00d4ff" stroke-width="2" stroke-dasharray="8,4" opacity=".7"/>
+        <line x1="390" y1="252" x2="620" y2="252" stroke="#00d4ff" stroke-width=".8" stroke-dasharray="8,4" opacity=".3"/>
+        <line x1="390" y1="260" x2="620" y2="260" stroke="#00d4ff" stroke-width="2" stroke-dasharray="8,4" opacity=".7"/>
+        <text x="505" y="285" font-family="Share Tech Mono" font-size="7.5" fill="#3a6080" text-anchor="middle">OS2 Simplex LC-UPC ↔ LC-UPC SMF</text>
+        <text x="505" y="297" font-family="Share Tech Mono" font-size="7.5" fill="#3a6080" text-anchor="middle">1000BASE-BX WDM BiDi | 150ft flown</text>
+        <text x="505" y="314" font-family="Share Tech Mono" font-size="8" fill="#39ff14" text-anchor="middle">◉ FULL-DUPLEX GIGABIT ACTIVE</text>
+
+        <!-- H.264 Video Stream label above fiber -->
+        <text x="505" y="188" font-family="Share Tech Mono" font-size="7" fill="#39ff14" text-anchor="middle">H.264 Video (GStreamer RTP/UDP) →</text>
+        <text x="505" y="355" font-family="Share Tech Mono" font-size="7" fill="#ff6b00" text-anchor="middle">← MAVLink Telemetry (TCP/IP static IP)</text>
+
+        <!-- Arrows: drone SFP → fiber box -->
+        <line x1="176" y1="474" x2="378" y2="252" stroke="#00d4ff" stroke-width="1.2" marker-end="url(#a1)" stroke-dasharray="5,3" opacity=".7"/>
+        <!-- Arrows: fiber box → GS SFP -->
+        <line x1="632" y1="252" x2="840" y2="448" stroke="#00d4ff" stroke-width="1.2" marker-end="url(#a1)" stroke-dasharray="5,3" opacity=".7"/>
+
+        <!-- ═══ GROUND STATION (right) ═══ -->
+
+        <!-- Ground SFP / Media Converter -->
+        <rect x="842" y="430" width="162" height="44" rx="4" fill="#0a3a5c" stroke="#00d4ff" stroke-width="1.5"/>
+        <text x="923" y="448" font-family="Share Tech Mono" font-size="8.5" fill="#b8d4e8" text-anchor="middle">SFP MEDIA CONVERTER</text>
+        <text x="923" y="459" font-family="Share Tech Mono" font-size="7.5" fill="#00d4ff" text-anchor="middle">(Ground side)</text>
+        <text x="923" y="469" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">1000BASE-BX-D TX1550/RX1310</text>
+
+        <!-- Ground Laptop / Mission Planner -->
+        <rect x="842" y="310" width="162" height="54" rx="4" fill="#0a3a5c" stroke="#00d4ff" stroke-width="1.5"/>
+        <text x="923" y="330" font-family="Share Tech Mono" font-size="8.5" fill="#b8d4e8" text-anchor="middle">GROUND STATION</text>
+        <text x="923" y="341" font-family="Share Tech Mono" font-size="7.5" fill="#00d4ff" text-anchor="middle">Laptop (Mission Planner 1.3)</text>
+        <text x="923" y="352" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">Static IP | GStreamer Windows</text>
+        <text x="923" y="363" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">HUD Video Feed | MAVLink GCS</text>
+
+        <!-- RC Controller -->
+        <rect x="842" y="200" width="162" height="44" rx="4" fill="#061828" stroke="#3a6080" stroke-width="1"/>
+        <text x="923" y="219" font-family="Share Tech Mono" font-size="8.5" fill="#b8d4e8" text-anchor="middle">RC TRANSMITTER</text>
+        <text x="923" y="230" font-family="Share Tech Mono" font-size="7" fill="#3a6080" text-anchor="middle">Radiomaster Pocket M2</text>
+        <text x="923" y="241" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">Serial USB → Laptop (Manual Override)</text>
+
+        <!-- GS Arrows -->
+        <line x1="923" y1="430" x2="923" y2="365" stroke="#00d4ff" stroke-width="1.2" marker-end="url(#a1)"/>
+        <text x="934" y="402" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080">Ethernet</text>
+        <line x1="923" y1="310" x2="923" y2="245" stroke="#3a6080" stroke-width="1" marker-end="url(#a1)" stroke-dasharray="3,2" opacity=".7"/>
+        <text x="934" y="282" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080">Serial/USB</text>
+
+        <!-- ExpressLRS RC Receiver on drone -->
+        <rect x="20" y="510" width="155" height="24" rx="3" fill="#0a3a5c" stroke="#3a6080" stroke-width=".8"/>
+        <text x="97" y="522" font-family="Share Tech Mono" font-size="7" fill="#b8d4e8" text-anchor="middle">ExpressLRS EP2 Nano RX (2.4GHz)</text>
+        <text x="97" y="530" font-family="Share Tech Mono" font-size="6" fill="#3a6080" text-anchor="middle">SBUS → FC | Manual override fallback</text>
+      </svg>
+    </div>
+
+    <!-- SUBSYSTEM TABS -->
+    <div class="reveal">
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('flight')">FLIGHT CONTROL</button>
+        <button class="tab-btn" onclick="switchTab('ai')">AI VISION PIPELINE</button>
+        <button class="tab-btn" onclick="switchTab('comms')">COMMS STACK</button>
+        <button class="tab-btn" onclick="switchTab('power')">POWER SYSTEM</button>
+        <button class="tab-btn" onclick="switchTab('mavlink')">MAVLink / UDP</button>
+      </div>
+
+      <div id="tab-flight" class="tab-panel active">
+        <div class="subsystem-grid">
+          <div class="sub-block orange">
+            <div class="sub-title">MATEK F405-WMN</div>
+            <ul class="sub-list">
+              <li>ArduCopter firmware v4.5.7</li>
+              <li>UART2 ↔ Raspberry Pi 4B MAVLink bridge</li>
+              <li>STABILIZE / LOITER / GUIDED / AUTO modes</li>
+              <li>Guided mode → software yaw control for target tracking</li>
+              <li>GPS/compass: BE-880 (38400bps) with standoff mount</li>
+              <li>ExpressLRS EP2 Nano RX (SBUS) for manual override</li>
+            </ul>
+            <span class="chip-tag">ArduCopter 4.5.7</span>
+          </div>
+          <div class="sub-block">
+            <div class="sub-title">ESC & MOTOR SYSTEM</div>
+            <ul class="sub-list">
+              <li>Hobbywing XRotor G2 Micro 65A 6S 4-in-1 (30×30)</li>
+              <li>BLHeli_32 / AM32 ESC firmware</li>
+              <li>DSHOT protocol for motor control</li>
+              <li>4× LigPower F100 (2810) FPV motors</li>
+              <li>Gemfan 8145 3-blade propellers (CW/CCW)</li>
+              <li>Total max thrust: 9,868g (2,467g per motor)</li>
+            </ul>
+            <span class="chip-tag">No-load RPM: 24,420</span>
+          </div>
+          <div class="sub-block">
+            <div class="sub-title">YOURGRC 8" FRAME</div>
+            <ul class="sub-list">
+              <li>8-inch X-frame quadcopter</li>
+              <li>Dry weight: 1,494g | AUW: 2,274g</li>
+              <li>Max payload capacity: 2,730g</li>
+              <li>Flight time: ~20 minutes</li>
+              <li>Thrust-to-weight ratio: 4.49:1</li>
+              <li>Custom 3D-printed mounts throughout</li>
+            </ul>
+            <span class="chip-tag">SolidWorks + PrusaSlicer FDM</span>
+          </div>
+          <div class="sub-block orange">
+            <div class="sub-title">GPS & CALIBRATION</div>
+            <ul class="sub-list">
+              <li>BE-880 GPS + compass module</li>
+              <li>Custom GPS/compass standoff (3D printed)</li>
+              <li>Calibration strictness critical for flight stability</li>
+              <li>EKF-based sensor fusion</li>
+              <li>Oscillation required PID tuning in Jan testing</li>
+              <li>Tight calibration threshold → successful flight in March</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-ai" class="tab-panel">
+        <!-- AI flow diagram based on Image 2 and poster logic flow -->
+        <div style="background:#000;border:1px solid var(--border);padding:28px;margin-bottom:24px;">
+          <svg viewBox="0 0 820 200" style="width:100%;height:auto;">
+            <defs>
+              <marker id="ba1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#00d4ff"/></marker>
+              <marker id="ba3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#39ff14"/></marker>
+            </defs>
+            <!-- IMX500 -->
+            <rect x="10" y="40" width="130" height="110" rx="4" fill="#061828" stroke="#ff6b00" stroke-width="1.5"/>
+            <text x="75" y="58" font-family="Share Tech Mono" font-size="7.5" fill="#ff6b00" text-anchor="middle">IMX500 CAMERA</text>
+            <rect x="20" y="64" width="110" height="24" rx="3" fill="#0a3a5c" stroke="#ff6b00" stroke-width=".8"/>
+            <text x="75" y="77" font-family="Share Tech Mono" font-size="7" fill="#b8d4e8" text-anchor="middle">Sensor</text>
+            <rect x="20" y="94" width="110" height="24" rx="3" fill="#0a3a5c" stroke="#ff6b00" stroke-width=".8"/>
+            <text x="75" y="107" font-family="Share Tech Mono" font-size="7" fill="#b8d4e8" text-anchor="middle">ISP (onboard)</text>
+            <rect x="20" y="124" width="110" height="20" rx="3" fill="#0a3a5c" stroke="#39ff14" stroke-width=".8"/>
+            <text x="75" y="137" font-family="Share Tech Mono" font-size="7" fill="#39ff14" text-anchor="middle">AI Accelerator</text>
+            <!-- IMX500 internal arrows -->
+            <line x1="75" y1="88" x2="75" y2="92" stroke="#ff6b00" stroke-width="1" marker-end="url(#ba1)"/>
+            <line x1="75" y1="118" x2="75" y2="122" stroke="#ff6b00" stroke-width="1" marker-end="url(#ba1)"/>
+            <!-- Input tensor label -->
+            <text x="75" y="170" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">Input Tensor ↓</text>
+            <line x1="55" y1="144" x2="55" y2="160" stroke="#39ff14" stroke-width=".8" stroke-dasharray="3,2" opacity=".5"/>
+
+            <!-- RPi AI processing -->
+            <rect x="200" y="30" width="180" height="140" rx="4" fill="#061828" stroke="#39ff14" stroke-width="1.5"/>
+            <text x="290" y="50" font-family="Share Tech Mono" font-size="7.5" fill="#39ff14" text-anchor="middle">RASPBERRY PI 4B — AI LOGIC</text>
+            <rect x="210" y="56" width="75" height="24" rx="3" fill="#0a3a5c" stroke="#00d4ff" stroke-width=".8"/>
+            <text x="247" y="69" font-family="Share Tech Mono" font-size="7" fill="#b8d4e8" text-anchor="middle">PiCamera2</text>
+            <text x="247" y="78" font-family="Share Tech Mono" font-size="6" fill="#3a6080" text-anchor="middle">Module</text>
+            <rect x="296" y="56" width="75" height="24" rx="3" fill="#0a3a5c" stroke="#ff6b00" stroke-width=".8"/>
+            <text x="333" y="69" font-family="Share Tech Mono" font-size="7" fill="#b8d4e8" text-anchor="middle">IMX500</text>
+            <text x="333" y="78" font-family="Share Tech Mono" font-size="6" fill="#3a6080" text-anchor="middle">Intrinsics</text>
+            <!-- Detection pipeline box -->
+            <rect x="210" y="90" width="160" height="50" rx="3" fill="#0a3a5c" stroke="#39ff14" stroke-width=".8"/>
+            <text x="290" y="104" font-family="Share Tech Mono" font-size="7" fill="#b8d4e8" text-anchor="middle">Object Detection Pipeline</text>
+            <text x="290" y="115" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">Confidence Filter | IOU Threshold</text>
+            <text x="290" y="126" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">Drone Angle Calculation</text>
+            <rect x="210" y="150" width="75" height="16" rx="3" fill="#0a3a5c" stroke="#00d4ff" stroke-width=".8"/>
+            <text x="247" y="161" font-family="Share Tech Mono" font-size="6.5" fill="#00d4ff" text-anchor="middle">JSON Logger</text>
+            <rect x="296" y="150" width="75" height="16" rx="3" fill="#0a3a5c" stroke="#39ff14" stroke-width=".8"/>
+            <text x="333" y="161" font-family="Share Tech Mono" font-size="6.5" fill="#39ff14" text-anchor="middle">pymavlink</text>
+
+            <!-- Image data arrow: IMX500 → RPi -->
+            <line x1="142" y1="88" x2="198" y2="88" stroke="#00d4ff" stroke-width="1.2" marker-end="url(#ba1)"/>
+            <text x="170" y="83" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">Image Data</text>
+            <!-- Output tensor -->
+            <line x1="142" y1="134" x2="198" y2="110" stroke="#39ff14" stroke-width="1" marker-end="url(#ba3)" stroke-dasharray="4,2" opacity=".7"/>
+            <text x="162" y="130" font-family="Share Tech Mono" font-size="6" fill="#3a6080">Output Tensor</text>
+
+            <!-- pymavlink → Flight Controller -->
+            <rect x="470" y="130" width="130" height="30" rx="4" fill="#0a3a5c" stroke="#ff6b00" stroke-width="1.2"/>
+            <text x="535" y="147" font-family="Share Tech Mono" font-size="7.5" fill="#b8d4e8" text-anchor="middle">FLIGHT CONTROLLER</text>
+            <text x="535" y="157" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">Matek F405 | UART</text>
+            <line x1="382" y1="158" x2="468" y2="145" stroke="#39ff14" stroke-width="1.2" marker-end="url(#ba3)"/>
+            <text x="426" y="160" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080">MAVLink cmd (yaw)</text>
+
+            <!-- Video pipeline -->
+            <rect x="470" y="40" width="130" height="75" rx="4" fill="#061828" stroke="#00d4ff" stroke-width="1.2"/>
+            <text x="535" y="57" font-family="Share Tech Mono" font-size="7.5" fill="#00d4ff" text-anchor="middle">VIDEO PIPELINE</text>
+            <text x="535" y="69" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">RPi 4B → H.264 Encoder</text>
+            <text x="535" y="79" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">↓ FFmpeg / GStreamer</text>
+            <text x="535" y="89" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">↓ UDP Stream (RTP)</text>
+            <text x="535" y="104" font-family="Share Tech Mono" font-size="6.5" fill="#39ff14" text-anchor="middle">→ Mission Planner HUD</text>
+            <line x1="382" y1="80" x2="468" y2="80" stroke="#00d4ff" stroke-width="1.2" marker-end="url(#ba1)"/>
+            <text x="426" y="73" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080">Video frames</text>
+
+            <!-- Fiber label -->
+            <rect x="660" y="55" width="140" height="100" rx="4" fill="#020b14" stroke="#00d4ff" stroke-width="1.5"/>
+            <text x="730" y="78" font-family="Share Tech Mono" font-size="7" fill="#00d4ff" text-anchor="middle">FIBER TETHER</text>
+            <text x="730" y="91" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">Gigabit Ethernet</text>
+            <text x="730" y="103" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">H.264 Video (UDP)</text>
+            <text x="730" y="115" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">MAVLink (TCP)</text>
+            <text x="730" y="130" font-family="Share Tech Mono" font-size="6.5" fill="#39ff14" text-anchor="middle">→ Ground Station</text>
+            <text x="730" y="143" font-family="Share Tech Mono" font-size="6" fill="#3a6080" text-anchor="middle">720p @ 30fps | 2–4ms</text>
+            <line x1="602" y1="75" x2="658" y2="80" stroke="#00d4ff" stroke-width="1" marker-end="url(#ba1)"/>
+          </svg>
+        </div>
+        <div class="subsystem-grid">
+          <div class="sub-block green">
+            <div class="sub-title">IMX500 AI CAMERA</div>
+            <ul class="sub-list">
+              <li>Sony IMX500 sensor with integrated Neural Processing Unit</li>
+              <li>YOLOv2 object detection — up to 35 FPS</li>
+              <li>AI inference runs entirely on-chip (no RPi CPU load)</li>
+              <li>CSI interface (15-pin 1.0mm flat flex cable) to RPi 4B</li>
+              <li>libcamera / rpicam-apps v1.11.1 driver stack</li>
+              <li>TensorFlow Lite / Sony IMX500 runtime libraries</li>
+            </ul>
+          </div>
+          <div class="sub-block green">
+            <div class="sub-title">DETECTION & TRACKING</div>
+            <ul class="sub-list">
+              <li>PiCamera2 module + IMX500 intrinsics for calibration</li>
+              <li>Confidence filter + IOU threshold + drone angle calc</li>
+              <li>JSON output logger for detection results</li>
+              <li>pymavlink sends yaw commands to Matek F405</li>
+              <li>RC GUIDED mode mapped to enable software yaw</li>
+              <li>75.86% correct identification avg over 6 trials</li>
+            </ul>
+            <span class="chip-tag">~40ft detection range</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-comms" class="tab-panel">
+        <!-- Communications diagram from Image 3 -->
+        <div style="background:#000;border:1px solid var(--border);padding:28px;margin-bottom:24px;">
+          <svg viewBox="0 0 560 380" style="width:100%;max-width:560px;height:auto;display:block;margin:0 auto;">
+            <defs>
+              <marker id="ca1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#00d4ff"/></marker>
+              <marker id="ca2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#ff6b00"/></marker>
+            </defs>
+            <!-- Matek F405 -->
+            <rect x="190" y="10" width="180" height="44" rx="4" fill="#0a3a5c" stroke="#ff6b00" stroke-width="1.5"/>
+            <text x="280" y="28" font-family="Share Tech Mono" font-size="8" fill="#b8d4e8" text-anchor="middle">MATEK F405 FLIGHT CTRL</text>
+            <text x="280" y="39" font-family="Share Tech Mono" font-size="7" fill="#ff6b00" text-anchor="middle">ArduPilot | ArduCopter 4.5.7</text>
+            <text x="280" y="49" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">FC processes MAVLink | UART2</text>
+            <!-- RPi 4B -->
+            <rect x="140" y="90" width="280" height="50" rx="4" fill="#0a3a5c" stroke="#39ff14" stroke-width="1.5"/>
+            <text x="280" y="111" font-family="Share Tech Mono" font-size="8" fill="#b8d4e8" text-anchor="middle">RASPBERRY PI 4B</text>
+            <text x="280" y="122" font-family="Share Tech Mono" font-size="7" fill="#39ff14" text-anchor="middle">pymavlink bridge: UART ↔ UDP</text>
+            <text x="280" y="133" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">Data = MAVLink frame in raw bytes | no translation</text>
+            <!-- AI Camera label (side) -->
+            <rect x="10" y="95" width="118" height="40" rx="4" fill="#061828" stroke="#ff6b00" stroke-width="1"/>
+            <text x="69" y="110" font-family="Share Tech Mono" font-size="7.5" fill="#ff6b00" text-anchor="middle">RPi AI CAMERA</text>
+            <text x="69" y="121" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">IMX500 | CSI Interface</text>
+            <text x="69" y="130" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">15-pin 1.0mm flat flex</text>
+            <line x1="128" y1="115" x2="138" y2="115" stroke="#ff6b00" stroke-width="1" marker-end="url(#ca2)"/>
+            <!-- SFP drone -->
+            <rect x="190" y="172" width="180" height="40" rx="4" fill="#0a3a5c" stroke="#00d4ff" stroke-width="1.5"/>
+            <text x="280" y="190" font-family="Share Tech Mono" font-size="8" fill="#b8d4e8" text-anchor="middle">SFP/ETHERNET ADAPTER</text>
+            <text x="280" y="201" font-family="Share Tech Mono" font-size="7" fill="#00d4ff" text-anchor="middle">(Drone — BX-U 1310nm TX)</text>
+            <text x="280" y="209" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">Mini Industrial RJ45 ↔ SFP</text>
+            <!-- Fiber cable -->
+            <rect x="220" y="242" width="120" height="30" rx="4" fill="#020b14" stroke="#00d4ff" stroke-width="2"/>
+            <text x="280" y="258" font-family="Share Tech Mono" font-size="8" fill="#00d4ff" text-anchor="middle">FIBER (OS2 SMF)</text>
+            <text x="280" y="268" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">150ft LC-UPC ↔ LC-UPC</text>
+            <!-- SFP ground -->
+            <rect x="190" y="302" width="180" height="40" rx="4" fill="#0a3a5c" stroke="#00d4ff" stroke-width="1.5"/>
+            <text x="280" y="320" font-family="Share Tech Mono" font-size="8" fill="#b8d4e8" text-anchor="middle">SFP/ETHERNET ADAPTER</text>
+            <text x="280" y="331" font-family="Share Tech Mono" font-size="7" fill="#00d4ff" text-anchor="middle">(Ground — BX-D 1550nm TX)</text>
+            <text x="280" y="339" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">Mini Industrial RJ45 ↔ SFP</text>
+            <!-- Ground station laptop -->
+            <rect x="170" y="368" width="220" height="10" rx="3" fill="#0a3a5c" stroke="#00d4ff" stroke-width="1"/>
+            <text x="280" y="377" font-family="Share Tech Mono" font-size="7" fill="#b8d4e8" text-anchor="middle">GROUND STATION (LAPTOP) — Mission Planner via Static IP</text>
+            <!-- Arrows vertical -->
+            <line x1="280" y1="54" x2="280" y2="88" stroke="#ff6b00" stroke-width="1.2" marker-end="url(#ca2)"/>
+            <line x1="272" y1="88" x2="272" y2="54" stroke="#00d4ff" stroke-width=".8" stroke-dasharray="3,2" marker-end="url(#ca1)" opacity=".6"/>
+            <text x="295" y="75" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080">UART</text>
+            <line x1="280" y1="140" x2="280" y2="170" stroke="#00d4ff" stroke-width="1.2" marker-end="url(#ca1)"/>
+            <line x1="272" y1="170" x2="272" y2="140" stroke="#ff6b00" stroke-width=".8" stroke-dasharray="3,2" marker-end="url(#ca2)" opacity=".6"/>
+            <text x="295" y="159" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080">Ethernet</text>
+            <line x1="280" y1="212" x2="280" y2="240" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#ca1)"/>
+            <line x1="272" y1="240" x2="272" y2="212" stroke="#00d4ff" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#ca1)" opacity=".5"/>
+            <line x1="280" y1="272" x2="280" y2="300" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#ca1)"/>
+            <line x1="272" y1="300" x2="272" y2="272" stroke="#00d4ff" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#ca1)" opacity=".5"/>
+            <text x="296" y="290" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080">Fiber BiDi</text>
+            <line x1="280" y1="342" x2="280" y2="366" stroke="#00d4ff" stroke-width="1.2" marker-end="url(#ca1)"/>
+            <text x="296" y="360" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080">Ethernet</text>
+          </svg>
+        </div>
+        <div class="subsystem-grid">
+          <div class="sub-block">
+            <div class="sub-title">SFP FIBER MODULES</div>
+            <ul class="sub-list">
+              <li>TX (Drone): 1000BASE-BX-U SFP — TX 1310nm / RX 1550nm</li>
+              <li>RX (Ground): 1000BASE-BX-D SFP — TX 1550nm / RX 1310nm</li>
+              <li>Wavelength-division multiplexing (WDM) full-duplex on one fiber</li>
+              <li>IEEE 802.3 1000BASE-X Gigabit Ethernet standard</li>
+              <li>SFP MSA mechanical/electrical compatibility</li>
+              <li>LC-UPC connectors, OS2 simplex SMF cable</li>
+            </ul>
+            <span class="chip-tag">FS.com SKU 29892 / 29893</span>
+          </div>
+          <div class="sub-block">
+            <div class="sub-title">MAVLink / VIDEO OVER FIBER</div>
+            <ul class="sub-list">
+              <li>Mission Planner connects to RPi via static IP over UDP</li>
+              <li>RPi translates UART ↔ UDP (MAVLink framing unchanged)</li>
+              <li>H.264 video encoded by GStreamer 1.22+ on RPi</li>
+              <li>RTP/UDP stream → GStreamer on Windows (Mission Planner)</li>
+              <li>Video + telemetry run simultaneously on same fiber</li>
+              <li>RTP/RTSP and H.264 encoding per IETF standards</li>
+            </ul>
+            <span class="chip-tag">2–4ms latency | 720p/30fps</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-power" class="tab-panel">
+        <!-- Power diagram from poster Fig 4 -->
+        <div style="background:#000;border:1px solid var(--border);padding:28px;margin-bottom:24px;">
+          <svg viewBox="0 0 700 160" style="width:100%;height:auto;">
+            <defs>
+              <marker id="pa1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#ff6b00"/></marker>
+            </defs>
+            <!-- Battery -->
+            <rect x="20" y="55" width="110" height="50" rx="4" fill="#0a3a5c" stroke="#ff6b00" stroke-width="1.5"/>
+            <text x="75" y="75" font-family="Share Tech Mono" font-size="8" fill="#b8d4e8" text-anchor="middle">BATTERY</text>
+            <text x="75" y="87" font-family="Share Tech Mono" font-size="7" fill="#3a6080" text-anchor="middle">Zeee 6S 5200mAh</text>
+            <text x="75" y="98" font-family="Share Tech Mono" font-size="6.5" fill="#ff6b00" text-anchor="middle">100C | 22.2V nom</text>
+            <!-- FC -->
+            <rect x="180" y="55" width="110" height="50" rx="4" fill="#0a3a5c" stroke="#ff6b00" stroke-width="1.2"/>
+            <text x="235" y="75" font-family="Share Tech Mono" font-size="7.5" fill="#b8d4e8" text-anchor="middle">FLIGHT CTRL</text>
+            <text x="235" y="87" font-family="Share Tech Mono" font-size="7" fill="#3a6080" text-anchor="middle">Matek F405</text>
+            <text x="235" y="97" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">5V BEC powered</text>
+            <!-- ESC -->
+            <rect x="340" y="55" width="100" height="50" rx="4" fill="#0a3a5c" stroke="#ff6b00" stroke-width="1.2"/>
+            <text x="390" y="75" font-family="Share Tech Mono" font-size="7.5" fill="#b8d4e8" text-anchor="middle">ESC (4-in-1)</text>
+            <text x="390" y="87" font-family="Share Tech Mono" font-size="7" fill="#3a6080" text-anchor="middle">Hobbywing 65A</text>
+            <!-- Motors -->
+            <rect x="468" y="20" width="60" height="24" rx="3" fill="#0a3a5c" stroke="#ff6b00" stroke-width=".8"/>
+            <text x="498" y="35" font-family="Share Tech Mono" font-size="7" fill="#b8d4e8" text-anchor="middle">M1</text>
+            <rect x="468" y="50" width="60" height="24" rx="3" fill="#0a3a5c" stroke="#ff6b00" stroke-width=".8"/>
+            <text x="498" y="65" font-family="Share Tech Mono" font-size="7" fill="#b8d4e8" text-anchor="middle">M2</text>
+            <rect x="468" y="80" width="60" height="24" rx="3" fill="#0a3a5c" stroke="#ff6b00" stroke-width=".8"/>
+            <text x="498" y="95" font-family="Share Tech Mono" font-size="7" fill="#b8d4e8" text-anchor="middle">M3</text>
+            <rect x="468" y="110" width="60" height="24" rx="3" fill="#0a3a5c" stroke="#ff6b00" stroke-width=".8"/>
+            <text x="498" y="125" font-family="Share Tech Mono" font-size="7" fill="#b8d4e8" text-anchor="middle">M4</text>
+            <line x1="440" y1="80" x2="466" y2="32" stroke="#ff6b00" stroke-width=".8" marker-end="url(#pa1)"/>
+            <line x1="440" y1="80" x2="466" y2="62" stroke="#ff6b00" stroke-width=".8" marker-end="url(#pa1)"/>
+            <line x1="440" y1="80" x2="466" y2="92" stroke="#ff6b00" stroke-width=".8" marker-end="url(#pa1)"/>
+            <line x1="440" y1="80" x2="466" y2="122" stroke="#ff6b00" stroke-width=".8" marker-end="url(#pa1)"/>
+            <!-- Frame / DC-DC / Media Conv -->
+            <rect x="180" y="118" width="100" height="30" rx="3" fill="#0a3a5c" stroke="#3a6080" stroke-width=".8"/>
+            <text x="230" y="136" font-family="Share Tech Mono" font-size="7" fill="#b8d4e8" text-anchor="middle">FRAME GND</text>
+            <rect x="295" y="118" width="100" height="30" rx="3" fill="#0a3a5c" stroke="#00d4ff" stroke-width=".8"/>
+            <text x="345" y="131" font-family="Share Tech Mono" font-size="7" fill="#b8d4e8" text-anchor="middle">DC-DC BUCK</text>
+            <text x="345" y="141" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">MP1584EN</text>
+            <rect x="410" y="118" width="110" height="30" rx="3" fill="#0a3a5c" stroke="#00d4ff" stroke-width="1"/>
+            <text x="465" y="131" font-family="Share Tech Mono" font-size="7" fill="#b8d4e8" text-anchor="middle">SFP MEDIA CONV.</text>
+            <text x="465" y="141" font-family="Share Tech Mono" font-size="6.5" fill="#3a6080" text-anchor="middle">Powered via Buck</text>
+            <!-- Power arrows -->
+            <line x1="130" y1="80" x2="178" y2="80" stroke="#ff6b00" stroke-width="1.5" marker-end="url(#pa1)"/>
+            <line x1="290" y1="80" x2="338" y2="80" stroke="#ff6b00" stroke-width="1.5" marker-end="url(#pa1)"/>
+            <line x1="235" y1="105" x2="235" y2="116" stroke="#3a6080" stroke-width="1" marker-end="url(#pa1)"/>
+            <line x1="345" y1="105" x2="345" y2="116" stroke="#00d4ff" stroke-width="1" marker-end="url(#pa1)"/>
+            <line x1="395" y1="133" x2="408" y2="133" stroke="#00d4ff" stroke-width="1" marker-end="url(#pa1)"/>
+          </svg>
+        </div>
+        <div class="subsystem-grid">
+          <div class="sub-block orange">
+            <div class="sub-title">MAIN POWER RAIL</div>
+            <ul class="sub-list">
+              <li>Zeee 6S 5200mAh 100C LiPo — 22.2V nominal</li>
+              <li>XT90 connectors for main power distribution</li>
+              <li>Battery → Flight Controller → 4-in-1 ESC</li>
+              <li>ESC BEC supplies 5V to Matek F405 FC</li>
+              <li>~20 minute flight time demonstrated</li>
+              <li>ISDT BattGo BG-8S battery checker / monitor</li>
+            </ul>
+          </div>
+          <div class="sub-block">
+            <div class="sub-title">DC-DC CONVERSION</div>
+            <ul class="sub-list">
+              <li>Mini MP1584EN DC-DC Buck converter (×2)</li>
+              <li>Steps down LiPo voltage to power SFP media converters</li>
+              <li>Raspberry Pi powered from ESC 5V BEC rail</li>
+              <li>Twisted-pair signal wires per IEC 61000 EMI rules</li>
+              <li>Soldered joints (high-current) + crimped (signal)</li>
+              <li>IPC-610 soldering quality standards applied</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-mavlink" class="tab-panel">
+        <div class="subsystem-grid">
+          <div class="sub-block">
+            <div class="sub-title">MAVLINK v2 FRAME FORMAT</div>
+            <ul class="sub-list">
+              <li>STX | LEN | INC/CMP FLAGS | SEQ | SYS ID | COMP ID | MSG ID</li>
+              <li>PAYLOAD (0–255 bytes) | CHECKSUM (2 bytes) | SIGNATURE (13 bytes)</li>
+              <li>UDP and UART are different protocols — same MAVLink frame bytes</li>
+              <li>RPi "repackages" (not translates) data between UART and UDP</li>
+              <li>Works like CAN bus — agreed format, sender/receiver encode/decode</li>
+              <li>MAVLink 2.0 frame: 12–280 bytes total</li>
+            </ul>
+            <span class="chip-tag">pymavlink | pyserial</span>
+          </div>
+          <div class="sub-block orange">
+            <div class="sub-title">MISSION PLANNER CONNECTION</div>
+            <ul class="sub-list">
+              <li>Mission Planner v1.3 connects via UDP on open port</li>
+              <li>Static IP assigned to Raspberry Pi on ground network</li>
+              <li>RPi opens UDP port → listens for Mission Planner commands</li>
+              <li>Bidirectional: Commands from MP → FC via RPi → UART</li>
+              <li>Telemetry from FC → UART → RPi → UDP → Mission Planner</li>
+              <li>GStreamer Runtime on Windows renders H.264 inside MP HUD</li>
+            </ul>
+            <span class="chip-tag">Mission Planner 1.3 | ArduPilot</span>
+          </div>
+          <div class="sub-block green">
+            <div class="sub-title">VIDEO ENCODING STACK</div>
+            <ul class="sub-list">
+              <li>libcamera / rpicam-apps v1.11.1 captures frames from IMX500</li>
+              <li>GStreamer 1.22+ pipeline: capture → H.264 encode → RTP mux</li>
+              <li>FFmpeg for additional transcoding/container handling</li>
+              <li>UDP stream output over Gigabit Ethernet link</li>
+              <li>Fiber SFP converts Ethernet to OS2 optical signal</li>
+              <li>Ground GStreamer Runtime decodes and renders in Mission Planner</li>
+            </ul>
+            <span class="chip-tag">H.264 | RTP/RTSP | UDP</span>
+          </div>
+          <div class="sub-block">
+            <div class="sub-title">NETWORKING STANDARDS</div>
+            <ul class="sub-list">
+              <li>IEEE 802.3 Gigabit Ethernet (1000BASE-X)</li>
+              <li>1000BASE-BX WDM single-fiber bidirectional Ethernet</li>
+              <li>SFP MSA (Multi-Source Agreement) transceiver compatibility</li>
+              <li>RTP/RTSP and H.264 encoding per IETF/ISO standards</li>
+              <li>IPC-610 / IPC/WHMA-A-620 wiring and harness standards</li>
+              <li>IEC 62133-2 LiPo battery safety / IEC 61000 EMI practices</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ TELEMETRY MONITOR ═══════════════ -->
+<section id="telemetry">
+  <div class="section-header reveal">
+    <div class="section-tag">// LIVE DATA</div>
+    <h2 class="section-title">TELEMETRY <span>MONITOR</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="telem-container">
+    <div class="telem-grid reveal">
+      <div class="telem-panel">
+        <div class="live-badge">SIM</div>
+        <div class="telem-label">ALTITUDE AGL</div>
+        <div><span class="telem-value" id="t-alt">--</span><span class="telem-unit">m</span></div>
+        <div class="telem-bar"><div class="telem-fill" id="b-alt" style="width:0%"></div></div>
+      </div>
+      <div class="telem-panel">
+        <div class="live-badge">SIM</div>
+        <div class="telem-label">GROUNDSPEED</div>
+        <div><span class="telem-value" id="t-spd">--</span><span class="telem-unit">m/s</span></div>
+        <div class="telem-bar"><div class="telem-fill orange" id="b-spd" style="width:0%"></div></div>
+      </div>
+      <div class="telem-panel">
+        <div class="live-badge">SIM</div>
+        <div class="telem-label">BATTERY VOLTAGE</div>
+        <div><span class="telem-value" id="t-bat">--</span><span class="telem-unit">V</span></div>
+        <div class="telem-bar"><div class="telem-fill green" id="b-bat" style="width:0%"></div></div>
+      </div>
+      <div class="telem-panel">
+        <div class="telem-label">HEADING</div>
+        <div><span class="telem-value" id="t-hdg">--</span><span class="telem-unit">°</span></div>
+        <div class="telem-bar"><div class="telem-fill orange" id="b-hdg" style="width:0%"></div></div>
+      </div>
+      <div class="telem-panel">
+        <div class="telem-label">FIBER LINK QUALITY</div>
+        <div><span class="telem-value" id="t-fib" style="color:var(--accent3)">--</span><span class="telem-unit">%</span></div>
+        <div class="telem-bar"><div class="telem-fill green" id="b-fib" style="width:0%"></div></div>
+      </div>
+      <div class="telem-panel">
+        <div class="telem-label">AI DETECTION FPS</div>
+        <div><span class="telem-value" id="t-fps" style="color:var(--accent2)">--</span><span class="telem-unit">fps</span></div>
+        <div class="telem-bar"><div class="telem-fill orange" id="b-fps" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div style="background:var(--panel);border:1px solid var(--border);padding:18px;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--dim);letter-spacing:.12em;margin-bottom:10px;">FLIGHT MODE</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span id="mode-badge" style="font-family:'Orbitron',monospace;font-size:.72rem;color:var(--accent3);border:1px solid var(--accent3);padding:4px 14px;letter-spacing:.1em;">GUIDED</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--dim);border:1px solid var(--border);padding:4px 14px;">ARMED</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--accent);border:1px solid var(--border);padding:4px 14px;">GPS LOCK</span>
+        </div>
+      </div>
+      <div style="background:var(--panel);border:1px solid var(--border);padding:18px;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--dim);letter-spacing:.12em;margin-bottom:10px;">AI VISION STATUS</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--accent3);border:1px solid var(--accent3);padding:4px 14px;" id="ai-status">DETECTING</span>
+          <span id="ai-obj" style="font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--text);border:1px solid var(--border);padding:4px 14px;">PERSON ×1</span>
+        </div>
+      </div>
+    </div>
+    <div class="reveal">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--dim);letter-spacing:.15em;padding-bottom:8px;text-transform:uppercase;">MAVLink / GStreamer Console</div>
+      <div class="console" id="console"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ RESULTS ═══════════════ -->
+<section id="results">
+  <div class="section-header reveal">
+    <div class="section-tag">// PERFORMANCE</div>
+    <h2 class="section-title">FLIGHT <span>RESULTS</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="results-container">
+    <div class="results-grid reveal">
+      <div class="result-panel">
+        <div class="result-panel-title">DRONE PERFORMANCE FIGURES</div>
+        <div class="result-row"><span class="result-key">Flight Time</span><span class="result-val cyan">~20 minutes</span></div>
+        <div class="result-row"><span class="result-key">Dry Weight</span><span class="result-val">1,494 g</span></div>
+        <div class="result-row"><span class="result-key">All-Up Weight (AUW)</span><span class="result-val">2,274 g</span></div>
+        <div class="result-row"><span class="result-key">Max Payload Capacity</span><span class="result-val cyan">2,730 g</span></div>
+        <div class="result-row"><span class="result-key">Thrust per Motor</span><span class="result-val">2,467 g</span></div>
+        <div class="result-row"><span class="result-key">Total Max Thrust</span><span class="result-val orange">9,868 g</span></div>
+        <div class="result-row"><span class="result-key">No-load RPM</span><span class="result-val">24,420</span></div>
+        <div class="result-row"><span class="result-key">Loaded RPM</span><span class="result-val">~20,757</span></div>
+        <div class="result-row"><span class="result-key">Thrust-to-Weight Ratio</span><span class="result-val green">4.49:1</span></div>
+        <div class="result-row"><span class="result-key">Fiber Tether Flown</span><span class="result-val cyan">150 ft</span></div>
+      </div>
+      <div class="result-panel">
+        <div class="result-panel-title">AI CAMERA METRICS</div>
+        <div class="result-row"><span class="result-key">Frame Rate</span><span class="result-val cyan">20–35 FPS</span></div>
+        <div class="result-row"><span class="result-key">Video Resolution</span><span class="result-val">720p</span></div>
+        <div class="result-row"><span class="result-key">Video Latency</span><span class="result-val green">2–4 ms</span></div>
+        <div class="result-row"><span class="result-key">Object Detection Accuracy</span><span class="result-val green">75.86%</span></div>
+        <div class="result-row"><span class="result-key">Trials Conducted</span><span class="result-val">6</span></div>
+        <div class="result-row"><span class="result-key">Human Detection Range</span><span class="result-val cyan">~40 feet</span></div>
+        <div class="result-row"><span class="result-key">AI Model</span><span class="result-val">YOLOv2 (IMX500 NPU)</span></div>
+        <div class="result-row"><span class="result-key">Encoding</span><span class="result-val">H.264 (GStreamer)</span></div>
+        <div class="result-row"><span class="result-key">Link Bandwidth</span><span class="result-val orange">1 Gbps</span></div>
+        <div class="result-row"><span class="result-key">Fiber Standard</span><span class="result-val">1000BASE-BX WDM</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ FIBER ADVANTAGE ═══════════════ -->
+<section id="fiber">
+  <div class="section-header reveal">
+    <div class="section-tag">// COMMS DESIGN RATIONALE</div>
+    <h2 class="section-title">FIBER-OPTIC <span>ADVANTAGE</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="fiber-container reveal">
+    <div class="fiber-comparison">
+      <div class="compare-col winner">
+        <div class="compare-head cyan">💡 PHOTON FLIGHT — FIBER-OPTIC (1000BASE-BX WDM)</div>
+        <div class="compare-item"><span class="ci-icon">✅</span><span>Zero EMI susceptibility — single-mode OS2 fiber immune to all RF jamming and electronic warfare</span></div>
+        <div class="compare-item"><span class="ci-icon">✅</span><span>Full-duplex 1 Gbps — H.264 720p video + MAVLink telemetry + AI data simultaneously on one fiber</span></div>
+        <div class="compare-item"><span class="ci-icon">✅</span><span>2–4ms end-to-end video latency demonstrated in flight over 150ft tether</span></div>
+        <div class="compare-item"><span class="ci-icon">✅</span><span>WDM BiDi transceivers: TX 1310nm / RX 1550nm — full duplex on a single strand (no second cable)</span></div>
+        <div class="compare-item"><span class="ci-icon">✅</span><span>No RF emissions — invisible to passive signal detection and direction-finding equipment</span></div>
+        <div class="compare-item"><span class="ci-icon">✅</span><span>Galvanic isolation — eliminates ground loops and noise near high-current ESCs/motors</span></div>
+        <div class="compare-item"><span class="ci-icon">✅</span><span>Operates in GPS-denied and damaged infrastructure environments</span></div>
+      </div>
+      <div class="compare-col">
+        <div class="compare-head dim">📻 TRADITIONAL RF RADIO LINK (2.4/5.8 GHz)</div>
+        <div class="compare-item"><span class="ci-icon">❌</span><span>Susceptible to jamming — 2.4 GHz and 5.8 GHz bands are easily blocked by adversaries</span></div>
+        <div class="compare-item"><span class="ci-icon">❌</span><span>Bandwidth-limited — video and telemetry compete; heavy compression degrades quality</span></div>
+        <div class="compare-item"><span class="ci-icon">❌</span><span>Higher latency and jitter — multipath reflections, interference degrade real-time control</span></div>
+        <div class="compare-item"><span class="ci-icon">❌</span><span>RF emissions expose operator position to direction-finding equipment</span></div>
+        <div class="compare-item"><span class="ci-icon">❌</span><span>Signal quality degrades with distance and obstacles — unreliable in hazardous environments</span></div>
+        <div class="compare-item"><span class="ci-icon">❌</span><span>Signal can be intercepted, replayed, or spoofed by adversaries</span></div>
+        <div class="compare-item"><span class="ci-icon">❌</span><span>GPS dependence — fails in signal-denied environments (rubble, jamming, underground)</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ BILL OF MATERIALS ═══════════════ -->
+<section id="bom">
+  <div class="section-header reveal">
+    <div class="section-tag">// BILL OF MATERIALS</div>
+    <h2 class="section-title">HARDWARE <span>MANIFEST</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div style="max-width:1100px;margin:0 auto;padding:0 40px 80px;">
+    <div class="bom-wrap reveal">
+      <table class="bom-table">
+        <thead>
+          <tr><th>COMPONENT</th><th>PART / PRODUCT</th><th>QTY</th><th>NOTES</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Flight Controller</td><td>Matek F405-WMN</td><td>1</td><td>ArduCopter 4.5.7 | MAVLink 2.0 | UART2 to RPi</td></tr>
+          <tr><td>ESC</td><td>Hobbywing XRotor G2 Micro 65A 6S AM32 4-in-1 (30×30)</td><td>1</td><td>BLHeli_32/AM32 firmware | DSHOT</td></tr>
+          <tr><td>Motors (×4)</td><td>LigPower F100 (2810) FPV Motor</td><td>4</td><td>No-load RPM 24,420 | 2,467g thrust each</td></tr>
+          <tr><td>Propellers</td><td>Gemfan 8145 3-Blade (Black)</td><td>2–3 sets</td><td>CW / CCW pairs</td></tr>
+          <tr><td>Frame</td><td>YoungRC 8" Quadcopter Frame</td><td>1</td><td>X-frame | custom 3D-printed brackets</td></tr>
+          <tr><td>Battery</td><td>Zeee 6S 5200mAh 100C LiPo</td><td>1–2</td><td>22.2V nom | XT90 connectors | ~20min flight</td></tr>
+          <tr><td>Battery Charger</td><td>HTRC T240 Duo (80W)</td><td>1</td><td>Balance charge</td></tr>
+          <tr><td>Battery Checker</td><td>ISDT BattGo BG-8S</td><td>1</td><td>Voltage/cell monitor</td></tr>
+          <tr><td>Companion Computer</td><td>Raspberry Pi 4B (4GB RAM) — SC0194(9)</td><td>1</td><td>GStreamer | pymavlink | libcamera | AI inference</td></tr>
+          <tr><td>AI Camera</td><td>Raspberry Pi AI Camera (IMX500)</td><td>1</td><td>YOLOv2 | 35 FPS | onboard NPU | CSI 15-pin</td></tr>
+          <tr><td>TX Fiber Module (Drone)</td><td>1000BASE-BX-U SFP BiDi TX1310/RX1550 10km</td><td>1</td><td>FS.com SKU 29892 | Part SFP-1G35-BX10</td></tr>
+          <tr><td>RX Fiber Module (Ground)</td><td>1000BASE-BX-D SFP BiDi TX1550/RX1310 10km</td><td>1</td><td>FS.com SKU 29893 | Part SFP-1G53-BX10</td></tr>
+          <tr><td>Fiber Patch Cable</td><td>Simplex LC-UPC ↔ LC-UPC OS2 SMF, 1.2mm Riser</td><td>1</td><td>FS.com SKU 319469 | Custom 150ft length</td></tr>
+          <tr><td>Media Converter (×2)</td><td>Mini Industrial 1× RJ45 ↔ 1× 1000Base-X SFP</td><td>2</td><td>FS.com SKU 143413 | IMCGA1F1T | Drone + GS</td></tr>
+          <tr><td>DC-DC Buck Converter</td><td>Mini MP1584EN Adjustable Power Supply Module</td><td>2</td><td>Powers SFP media converters from LiPo rail</td></tr>
+          <tr><td>RC Transmitter</td><td>Radiomaster Pocket M2</td><td>1</td><td>Manual override | Serial USB to laptop</td></tr>
+          <tr><td>RC Receiver</td><td>ExpressLRS EP2 Nano RX (2.4GHz, 0.44g)</td><td>1</td><td>SBUS to FC | Ceramic antenna</td></tr>
+          <tr><td>GPS + Compass</td><td>BE-880 GPS Receiver + Compass (38400bps, 10th chip)</td><td>1</td><td>Custom 3D-printed standoff mount</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:16px;font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--dim);text-align:center;" class="reveal">
+      3D-printed parts modeled in SolidWorks 2024 · Printed on Prusa i3 MK3S+ via PrusaSlicer · FDM fabrication
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ TEAM ═══════════════ -->
+<section id="team">
+  <div class="section-header reveal">
+    <div class="section-tag">// MISSION CREW</div>
+    <h2 class="section-title">DESIGN <span>TEAM</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="team-container">
+    <div class="team-grid">
+      <div class="team-card reveal">
+        <div class="team-avatar">MN</div>
+        <div class="team-name">MERVIN NGUYEN</div>
+        <div class="team-role">mervin1@uci.edu</div>
+        <div class="team-contrib">AI vision pipeline, YOLOv2/IMX500 integration, GStreamer video pipeline, flight testing, GitHub repo maintainer.</div>
+      </div>
+      <div class="team-card reveal">
+        <div class="team-avatar">NJ</div>
+        <div class="team-name">NATE JOHNSON</div>
+        <div class="team-role">nkjohnso@uci.edu</div>
+        <div class="team-contrib">Flight control configuration, 3D printing (SolidWorks), ArduPilot/MAVLink integration, PID tuning.</div>
+      </div>
+      <div class="team-card reveal">
+        <div class="team-avatar">NB</div>
+        <div class="team-name">NICK BREGA</div>
+        <div class="team-role">nbrega@uci.edu</div>
+        <div class="team-contrib">Network architecture, fiber link design, GStreamer video pipeline, Architecture Documentation.</div>
+      </div>
+      <div class="team-card reveal">
+        <div class="team-avatar">DB</div>
+        <div class="team-name">DESMOND BOLIA</div>
+        <div class="team-role">dbolia@uci.edu</div>
+        <div class="team-contrib">AI vision pipeline, Network architecture, autonomous tracking.</div>
+      </div>
+      <div class="team-card reveal">
+        <div class="team-avatar">JY</div>
+        <div class="team-name">JULIUS YANG</div>
+        <div class="team-role">juliuscy@uci.edu</div>
+        <div class="team-contrib">AI vision pipeline, ArduPilot Firmware Integration, Hardware assembly, GStreamer video pipeline, power systems & wiring.</div>
+      </div>
+      <div class="team-card reveal">
+        <div class="advisor-badge">ADVISOR</div>
+        <div class="team-avatar" style="border-color:var(--accent2)">PB</div>
+        <div class="team-name">PROF. PETER BURKE</div>
+        <div class="team-role">pburke@uci.edu</div>
+        <div class="team-contrib">Faculty advisor, UCI Samueli EECS Department</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:40px;font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--dim);line-height:1.9;" class="reveal">
+      <span style="color:var(--accent);">University of California, Irvine</span> — UCI Samueli School of Engineering<br/>
+      Department of Electrical Engineering &amp; Computer Science — EECS 159A/B Senior Design<br/>
+      <span style="color:var(--accent2);">Photon Flight: FAA Group 1 Fiber-Optic Tethered Drone for Search &amp; Rescue</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">PHOTON FLIGHT</div>
+  <div style="margin-bottom:8px;color:var(--accent);letter-spacing:.15em;">FIBER-OPTIC TETHERED UAV — SEARCH &amp; RESCUE</div>
+  <div>EECS 159A/B Senior Design · UCI Samueli School of Engineering · 2025–2026</div>
+  <div style="margin-top:8px;">Nate Johnson · Nick Brega · Desmond Bolia · Julius Yang · Mervin Nguyen · Advisor: Prof. Peter Burke</div>
+  <div style="margin-top:16px;font-size:.58rem;opacity:.35;">// OPEN SOURCE // GITHUB: mervinnguyen/photonflight_fiber_optic_drone // UCI EECS //</div>
+</footer>
+
+<script>
+// ── STARS ──
+(function(){
+  const c=document.getElementById('stars'),ctx=c.getContext('2d');
+  let W,H,s=[];
+  function resize(){W=c.width=innerWidth;H=c.height=innerHeight;s=[];for(let i=0;i<200;i++)s.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.3+.2,a:Math.random(),da:Math.random()*.007-.0035});}
+  function draw(){ctx.clearRect(0,0,W,H);s.forEach(p=>{p.a=Math.max(.08,Math.min(1,p.a+p.da));if(p.a<=.08||p.a>=1)p.da*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.28);ctx.fillStyle=`rgba(180,220,255,${p.a})`;ctx.fill();});requestAnimationFrame(draw);}
+  addEventListener('resize',resize);resize();draw();
+})();
+
+// ── SCROLL REVEAL ──
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');}),{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// ── TABS ──
+function switchTab(id){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(id)));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+id));
+}
+
+// ── TELEMETRY SIM ──
+let tv={alt:0,spd:0,bat:22.2,hdg:0,fib:100,fps:0};
+let tg={alt:12,spd:2.1,bat:21.8,hdg:142,fib:99.8,fps:28};
+const modes=['GUIDED','AUTO','LOITER','STABILIZE','RTL'];
+const objs=['PERSON ×1','VEHICLE ×1','NONE','PERSON ×2','MARKER DETECTED'];
+function lerp(a,b,t){return a+(b-a)*t;}
+function upd(){
+  const k=.05;
+  tv.alt=lerp(tv.alt,tg.alt+(Math.random()*1.2-.6),k);
+  tv.spd=lerp(tv.spd,tg.spd+(Math.random()*.4-.2),k);
+  tv.bat=lerp(tv.bat,tg.bat-(Math.random()*.005),k*.3);
+  tv.hdg=(tv.hdg+.4)%360;
+  tv.fib=Math.min(100,Math.max(98.5,tv.fib+(Math.random()*.06-.03)));
+  tv.fps=lerp(tv.fps,tg.fps+(Math.random()*4-2),k);
+  const f=n=>n.toFixed(1);
+  document.getElementById('t-alt').textContent=f(Math.max(0,tv.alt));
+  document.getElementById('b-alt').style.width=Math.min(100,tv.alt/30*100)+'%';
+  document.getElementById('t-spd').textContent=f(Math.max(0,tv.spd));
+  document.getElementById('b-spd').style.width=Math.min(100,tv.spd/15*100)+'%';
+  document.getElementById('t-bat').textContent=f(tv.bat);
+  document.getElementById('b-bat').style.width=Math.max(0,Math.min(100,(tv.bat-18)/(25.2-18)*100))+'%';
+  document.getElementById('t-hdg').textContent=Math.round(tv.hdg);
+  document.getElementById('b-hdg').style.width=(tv.hdg/360*100)+'%';
+  document.getElementById('t-fib').textContent=f(tv.fib);
+  document.getElementById('b-fib').style.width=tv.fib+'%';
+  document.getElementById('t-fps').textContent=Math.round(Math.max(0,tv.fps));
+  document.getElementById('b-fps').style.width=Math.min(100,tv.fps/35*100)+'%';
+  if(Math.random()<.005)document.getElementById('mode-badge').textContent=modes[Math.floor(Math.random()*modes.length)];
+  if(Math.random()<.01)document.getElementById('ai-obj').textContent=objs[Math.floor(Math.random()*objs.length)];
+}
+setInterval(upd,200);
+
+// ── MAVLINK CONSOLE ──
+const logs=[
+  'APM: ArduCopter V4.5.7 (Matek F405-WMN)','MAV: HEARTBEAT sysid=1 compid=1 type=QUADROTOR',
+  'MAV: GPS_RAW_INT lat=336 lon=-1178 alt=0','RPi: pymavlink UART2 bridge active port 14550',
+  'GS: Mission Planner UDP connected static IP','GS: H.264 stream active 720p@30fps via GStreamer',
+  'AI: IMX500 inference: PERSON conf=0.83 bbox=[120,240,200,380]','AI: YOLOv2 @ 28 FPS — NPU load nominal',
+  'AI: JSON output → pymavlink yaw command sent','APM: GUIDED mode — yaw cmd from companion CPU',
+  'FIBER: 1000BASE-BX-U link stable — 99.9% signal','MAV: ATTITUDE roll=0.02 pitch=-0.01 yaw=2.41',
+  'MAV: SYS_STATUS voltage_battery=21780mV','GS: Video latency measured 2.8ms (RTP timestamp)',
+  'APM: EKF3 IMU0 healthy — GPS/compass lock','FIBER: SFP TX 1310nm / RX 1550nm WDM nominal',
+  'AI: Confidence filter pass IOU=0.72 thresh=0.45','GStreamer: rtph264pay mtu=1400 → udpsink',
+  'APM: Arming check OK — motor test passed','RPi: libcamera IMX500 intrinsics loaded OK',
+];
+let li=0;
+const con=document.getElementById('console');
+function addLog(){
+  const d=new Date(),line=document.createElement('div');
+  line.className='console-line';
+  const h=String(d.getHours()).padStart(2,'0'),m=String(d.getMinutes()).padStart(2,'0'),s=String(d.getSeconds()).padStart(2,'0');
+  line.textContent=`[${h}:${m}:${s}] ${logs[li%logs.length]}`;
+  con.appendChild(line);
+  if(con.children.length>20)con.removeChild(con.firstChild);
+  con.scrollTop=con.scrollHeight;li++;
+}
+setInterval(addLog,1600);addLog();
+</script>
+</body>
+</html>

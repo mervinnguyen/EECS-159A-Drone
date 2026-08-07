@@ -2,7 +2,7 @@
 
 PhotonFlight is a **fiber-optic-tethered autonomous quadcopter** designed for operation in **RF-denied or GPS-degraded environments**.  
 
-The platform replaces traditional RF telemetry with a **secure bidirectional SFP fiber link**, enabling **low-latency video streaming, real-time telemetry, and reliable command/control communication** between the UAV and ground control station.
+The platform replaces traditional RF telemetry with a **secure bidirectional SFP fiber link**, enabling low-latency video streaming, real-time telemetry, and **reliable command/control communication** between the UAV and ground control station.
 
 The system integrates **ArduPilot flight control, embedded Linux module, onboard AI vision processing, and fiber-optic networking**, demonstrating a complete embedded system spanning hardware, firmware, networking, and autonomy.
 
